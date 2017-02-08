@@ -125,7 +125,7 @@ public class EzExp : MonoBehaviour {
 	{
 		if (0 <= trialIndex && trialIndex < trials.Count) {
 			currentTrialIndex = trialIndex;
-			return trials [currentTrialIndex];
+			return trials [currentTrialIndex] as Trial;
 		} else {
 			throw new System.IndexOutOfRangeException ();
 		}
