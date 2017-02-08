@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+using FileWriter;
 
 //TODO : Mettre ailleurs
 public enum LogLevel
@@ -61,7 +64,6 @@ public class EzExp : MonoBehaviour {
     public LogLevel logLevel = LogLevel.DEBUG;
 
     public string filePath;
-
     #endregion
 
 	#region attributes
@@ -91,7 +93,16 @@ public class EzExp : MonoBehaviour {
     {
 		trials = new ArrayList ();
 		currentTrialIndex = -1;
-		// TODO load data from file
+
+
+		List<List<string>> data = CsvFileReader.ReadAll(filepath, Encoding.UTF8);
+		string[] header = data [0].ToArray();
+		for (int i = 1; i < data.Count; i++) {
+			string[] line = data [i].ToArray ();
+			Trial trial = new Trial (header, line);
+			Log.Debug (trial.ToString());
+			trials.Add (trial);
+		}
 	}
 
 	/// <summary>
@@ -110,7 +121,7 @@ public class EzExp : MonoBehaviour {
 	public Trial LoadNextTrial() 
 	{
 		if (currentTrialIndex + 1 < trials.Count) {
-			return trials [currentTrialIndex++] as Trial;
+			return trials [++currentTrialIndex] as Trial;
 		} else {
 			throw new System.IndexOutOfRangeException("No more trial to run.");
 		}
@@ -140,18 +151,25 @@ public class EzExp : MonoBehaviour {
 			throw new TrialNotLoadedException();	
 		} else {
 			// TODO start timer associated to that Trial
+			Trial ct = (Trial) trials[currentTrialIndex];
+			ct.StartTrial();
 		}
 	}
 
 	/// <summary>
 	/// Ends the loaded trial.
 	/// </summary>
-	public void EndTrial()
+	public Trial EndTrial()
 	{
 		if (currentTrialIndex == -1) {
 			throw new TrialNotLoadedException ();	
 		} else {
 			// TODO stop timer associated to the Trial and save results
+			Trial ct = (Trial) trials[currentTrialIndex];
+			ct.EndTrial();
+			// TODO record results
+
+			return ct;
 		}
 	}
 	#endregion

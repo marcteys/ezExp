@@ -18,34 +18,36 @@ public class Trial {
 	/// Exception thrown on timer duration estimation and start time is greater than ending time
 	/// </summary>
 	public class TimerNotEndedException: Exception { public TimerNotEndedException(string msg): base(msg){} };
+	/// <summary>
+	/// Exception thrown when trying to end a trial that was not started
+	/// </summary>
+	public class TrialStateException: Exception { public TrialStateException(string msg): base(msg){} };
 	#endregion
 
 	#region attributes
 	/// <summary>
 	/// Dictionary containing attributes binding their names to their values.
 	/// </summary>
-	Dictionary<string, string> _attributes;
+	Dictionary<string, string> _attributes = new Dictionary<string, string> ();
 
 	/// <summary>
 	/// Dictionary containing pairs representing starting and ending time of timers named as the dictionary key.
 	/// This dictionary will always at least contain one main timer for the trial.
 	/// </summary>
-	Dictionary<string, KeyValuePair<float, float>> _timers;
+	Dictionary<string, float[]> _timers = new Dictionary<string, float[]> ();
+
+	public enum TrialState { NotStarted, Started, Ended };
+	TrialState _trialState = TrialState.NotStarted;
 	#endregion
 
 	#region constructors
 	/// <summary>
 	/// Default constructor that only adds a main timer to the timers dictionary.
 	/// </summary>
-	public Trial() 
-	{
-		_attributes = new Dictionary<string, string> ();
-		_timers = new Dictionary<string, KeyValuePair<float, float>> ();
-		AddTimer ("main");
-	}
+	public Trial() { AddTimer ("main"); }
 
 	/// <summary>
-	/// Create a new trial with the given attributes
+	/// Create a new <see cref="Trial"/> with the given attributes
 	/// </summary>
 	/// <param name="attributes">Attributes names</param>
 	public Trial(string[] attributes): this()
@@ -58,7 +60,7 @@ public class Trial {
 
 
 	/// <summary>
-	/// Create a new trial with the given attributes and values associated. 
+	/// Create a new <see cref="Trial"/> with the given attributes and values associated. 
 	/// </summary>
 	/// <param name="attributes">Attributes names</param>
 	/// <param name="values">Attributes values</param>
@@ -71,7 +73,7 @@ public class Trial {
 	}
 
 	/// <summary>
-	/// Create a new trial with the given attributes and values associated. Also create timers that would be used for this trial.
+	/// Create a new <see cref="Trial"/> with the given attributes and values associated. Also create timers that would be used for this trial.
 	/// </summary>
 	/// <param name="attributes">Names of the attributes.</param>
 	/// <param name="values">Values of these attributes.</param>
@@ -84,7 +86,7 @@ public class Trial {
 	}
 
 	/// <summary>
-	/// Create a new trial by copying the given attributes dictionary (name -> value)
+	/// Create a new <see cref="Trial"/> by copying the given attributes dictionary (name -> value)
 	/// </summary>
 	/// <param name="attributes">Dictionary of attributes.</param>
 	public Trial(Dictionary<string, string> attributes): this() 
@@ -94,13 +96,17 @@ public class Trial {
 		}
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="Trial"/> class based on another instance of it.
+	/// </summary>
+	/// <param name="toCopy">Other <see cref="Trial"/> instance to copy.</param>
 	public Trial(Trial toCopy): this()
 	{
 		foreach(KeyValuePair<string, string> pair in toCopy._attributes) {
 			_attributes.Add (pair.Key, pair.Value);
 		}
 
-		foreach(KeyValuePair<string, KeyValuePair<float, float>> pair in toCopy._timers) {
+		foreach(KeyValuePair<string, float[]> pair in toCopy._timers) {
 			_timers.Add (pair.Key, pair.Value);
 		}
 	}
@@ -143,6 +149,17 @@ public class Trial {
 		return res;
 	}
 
+	/// <summary>
+	/// Gets the attributes names.
+	/// </summary>
+	/// <returns>The attributes names.</returns>
+	public string[] GetAttributesNames()
+	{
+		string[] res = new string[_attributes.Count];
+		_attributes.Keys.CopyTo (res, 0);
+		return res;
+	}
+
 
 	/// <summary>
 	/// Add a timer to the dictionary with a given name that will be used to access it in the future.
@@ -152,7 +169,7 @@ public class Trial {
 	{ 
 		bool res = _timers.ContainsKey (name);
 		if (res) { _timers.Remove (name); }
-		_timers.Add (name, new KeyValuePair<float, float>(0f, 0f));
+		_timers.Add (name, new float[2] {0f, 0f});
 		return res;
 	}
 
@@ -164,7 +181,19 @@ public class Trial {
 	public void StartTimer(string name)
 	{
 		if (!_timers.ContainsKey (name)) { throw new KeyNotFoundException (); }
-		_timers[name] = new KeyValuePair<float, float>(Time.time, 0f);
+		_timers[name] = new float[2] {Time.time, Time.time};
+	}
+
+	/// <summary>
+	/// Set all timers starting time to the same (to avoid strange behaviors in the future)
+	/// </summary>
+	public void StartAllTimers()
+	{
+		float currentTime = Time.time;
+		foreach (string name in _timers.Keys) { 
+			_timers [name] [0] = currentTime;
+			_timers [name] [1] = currentTime;
+		}
 	}
 
 	/// <summary>
@@ -174,7 +203,7 @@ public class Trial {
 	public void EndTimer(string name)
 	{
 		if (!_timers.ContainsKey (name)) { throw new KeyNotFoundException (); }
-		_timers[name] = new KeyValuePair<float, float>(_timers[name].Key, Time.time);
+		_timers[name][1] = Time.time;
 	}
 
 	/// <summary>
@@ -184,9 +213,36 @@ public class Trial {
 	public float GetTimerDuration(string name)
 	{
 		if (!_timers.ContainsKey (name)) { throw new KeyNotFoundException (); }
-		KeyValuePair<float, float> times = _timers [name];
-		if (times.Value < times.Key) { throw new TimerNotEndedException ("Timer "+name+" started at ("+times.Key+") and never finished ("+times.Value+")"); }
-		return times.Value - times.Key;
+		float[] times = _timers [name];
+		if (times[0] == times[1]) { throw new TimerNotEndedException ("Timer "+name+" started at ("+times[0]+") and never finished"); }
+		return times[1] - times[0];
+	}
+
+	/// <summary>
+	/// Gets the timers names.
+	/// </summary>
+	/// <returns>The timers names.</returns>
+	public string[] GetTimersNames() { 
+		string[] res = new string[_timers.Count];
+		_timers.Keys.CopyTo (res, 0);
+		return res; 
+	}
+
+	/// <summary>
+	/// Start this trial (starts all timers by default and set state to started)
+	/// </summary>
+	public void StartTrial()
+	{
+		if (_trialState != TrialState.NotStarted) { throw new TrialStateException ("The trial has already been started"); }
+		StartAllTimers ();
+		_trialState = TrialState.Started;
+	}
+
+	public void EndTrial()
+	{
+		if (_trialState != TrialState.Started) { throw new TrialStateException ("The trial was not started yet"); }
+		EndTimer ("main");
+		_trialState = TrialState.Ended;
 	}
 
 	/// <summary>
@@ -204,9 +260,9 @@ public class Trial {
 		}
 
 		if (showTimers) {
-			foreach (KeyValuePair<string, KeyValuePair<float, float>> pair in _timers) {
-				KeyValuePair<float, float> times = pair.Value;
-				res += pair.Key+"="+times.Key+"-"+times.Value+";";
+			foreach (KeyValuePair<string, float[]> pair in _timers) {
+				float[] times = pair.Value;
+				res += pair.Key+"="+GetTimerDuration(pair.Key);
 			}
 		}
 

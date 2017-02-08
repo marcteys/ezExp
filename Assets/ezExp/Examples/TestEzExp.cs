@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System.Text;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 
 public class TestEzExp : MonoBehaviour {
     public GameObject prefab;
@@ -9,13 +11,28 @@ public class TestEzExp : MonoBehaviour {
     public int trials = 10;
 
     void Start () {
-        EzExp.Instance.Load("The EzExp instance is working!");
-        GenerateNewCube();
+        // GenerateNewCube();
+		EzExp.Instance.Load("Assets/ezExp/Examples/test_file.csv");
     }
 	
 	void Update () {
         CheckClick();
 
+		// L = Load next trial, S = Start trial, E = End trial
+		if (Input.GetKeyUp (KeyCode.L)) { 
+			try {
+				Trial t = EzExp.Instance.LoadNextTrial (); 
+				Log.Debug ("Trial loaded (" + t.ToString () + ")");
+			} catch (System.IndexOutOfRangeException e) {
+				Log.Debug ("No more trial to run");
+			}
+		} else if (Input.GetKeyUp (KeyCode.S)) {
+			EzExp.Instance.StartTrial ();
+			Log.Debug ("Trial started");
+		} else if (Input.GetKeyUp (KeyCode.E)) {
+			Trial t = EzExp.Instance.EndTrial ();
+			Log.Debug ("Trial ended ("+t.ToString(true)+")");
+		}
     }
 
     void CheckClick()
@@ -60,6 +77,5 @@ public class TestEzExp : MonoBehaviour {
         Vector3 randPos = new Vector3(Random.Range(-5, 5), Random.Range(-2, 2), Random.Range(-5, 5));
         lastCube = GameObject.Instantiate(prefab);
         lastCube.transform.position = randPos;
-
     }
 }
