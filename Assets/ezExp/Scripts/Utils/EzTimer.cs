@@ -4,6 +4,7 @@ using System.Threading;
 
 class EzTimer
 {
+    //TODO : creer un timermanager capable de lancer / arreter plusieurs timers 
 
     Stopwatch timer = null;
     string outputFormat = "";
@@ -25,14 +26,21 @@ class EzTimer
     public string Stop()
     {
         timer.Stop();
-        return timer.ToString();
+        return GetTime();
     }
 
-    public string GetTime(string format) // ++ format   
+    public string GetTime(string format = null) // ++ format   
     {
+        if (format != null)
+        {
+             // formater avec le nv format
+        } else
+        {
+            //formater avec le format defautl
+        }
 
-        return "";
+        //TODO : destroy after it sent
+        return timer.Elapsed.ToString();
     }
-
 
 }
