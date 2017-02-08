@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,6 +14,10 @@ public enum LogLevel
 };
 
 public class EzExp : MonoBehaviour {
+
+	#region exceptions
+	public class TrialNotLoadedException: Exception {};
+	#endregion
 
     #region Singleton
     /// <summary>
@@ -59,6 +64,19 @@ public class EzExp : MonoBehaviour {
 
     #endregion
 
+	#region attributes
+	/// <summary>
+	/// Contains the list of trials for a given user. Should be emptied at the end of the experiment.
+	/// </summary>
+	static ArrayList trials;
+
+	/// <summary>
+	/// Index of the current trial.
+	/// </summary>
+	static int currentTrialIndex = -1;
+	#endregion
+
+	#region functions
     void Awake ()
     {
 		// Open filereader
@@ -66,11 +84,75 @@ public class EzExp : MonoBehaviour {
 
 	/// <summary>
 	/// Load the variables file to prepare the experiment </summary>
-	/// <param name="test">Currently a testing string that will be logged</param>
+	/// <param name="filepath">File path to load data from</param>
 	/// <seealso cref="SomeMethod(string)">
 	/// Notice the use of the cref attribute to reference a specific method </seealso>
-	public void Load (string test)
+	public void Load (string filepath)
     {
-        Log.Warning(test);
+		trials = new ArrayList ();
+		currentTrialIndex = -1;
+		// TODO load data from file
 	}
+
+	/// <summary>
+	/// Launch at the very beginning of the experiment. Should load files containing exp data, prepare timers, get ready for recording
+	/// </summary>
+	public void StartExperiment() {}
+
+	/// <summary>
+	/// Should be called when the experiment is over to check recording files (and display/throw some messages/events?)
+	/// </summary>
+	public void EndExperiment() {}
+
+	/// <summary>
+	/// Loads the next trial in the list loaded from the init file
+	/// </summary>
+	public Trial LoadNextTrial() 
+	{
+		if (currentTrialIndex + 1 < trials.Count) {
+			return trials [currentTrialIndex++] as Trial;
+		} else {
+			throw new System.IndexOutOfRangeException("No more trial to run.");
+		}
+	}
+
+	/// <summary>
+	/// Loads the trial.
+	/// </summary>
+	/// <param name="trialIndex">Index of the trial to load</param>
+	/// <returns>The trial.</returns>
+	public Trial LoadTrial(int trialIndex)
+	{
+		if (0 <= trialIndex && trialIndex < trials.Count) {
+			currentTrialIndex = trialIndex;
+			return trials [currentTrialIndex];
+		} else {
+			throw new System.IndexOutOfRangeException ();
+		}
+	}
+
+	/// <summary>
+	/// Starts the loaded trial.
+	/// </summary>
+	public void StartTrial() 
+	{
+		if (currentTrialIndex == -1) {
+			throw new TrialNotLoadedException();	
+		} else {
+			// TODO start timer associated to that Trial
+		}
+	}
+
+	/// <summary>
+	/// Ends the loaded trial.
+	/// </summary>
+	public void EndTrial()
+	{
+		if (currentTrialIndex == -1) {
+			throw new TrialNotLoadedException ();	
+		} else {
+			// TODO stop timer associated to the Trial and save results
+		}
+	}
+	#endregion
 }
