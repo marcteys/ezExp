@@ -28,16 +28,15 @@ public class EzExp : MonoBehaviour {
             if (_instance != null)
                 return _instance;
 
-            EzExp[] uduinoManagers = FindObjectsOfType(typeof(EzExp)) as EzExp[];
-            if (uduinoManagers.Length == 0)
-            {
-                Log.Warning("EzExp not present on the scene. Creating a new one.");
-                EzExp manager = new GameObject("EzExp").AddComponent<EzExp>();
-                _instance = manager;
-                return _instance;
-            }
-            else
-                return _instance;
+			EzExp[] ezExpManager = FindObjectsOfType(typeof(EzExp)) as EzExp[];
+			if (ezExpManager.Length == 0) {
+				Log.Warning ("EzExp not present on the scene. Creating a new one.");
+				ezExpManager = new EzExp[1] {new GameObject ("EzExp").AddComponent<EzExp> ()};
+			} 
+
+			// instanciate the new instance and return the value
+			_instance = ezExpManager [0];
+			return _instance;
         }
         set
         {
@@ -64,7 +63,12 @@ public class EzExp : MonoBehaviour {
     {
 		// Open filereader
 	}
-	
+
+	/// <summary>
+	/// Load the variables file to prepare the experiment </summary>
+	/// <param name="test">Currently a testing string that will be logged</param>
+	/// <seealso cref="SomeMethod(string)">
+	/// Notice the use of the cref attribute to reference a specific method </seealso>
 	public void Load (string test)
     {
         Log.Warning(test);

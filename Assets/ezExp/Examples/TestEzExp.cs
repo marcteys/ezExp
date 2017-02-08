@@ -5,7 +5,7 @@ using UnityEngine;
 public class TestEzExp : MonoBehaviour {
 
 	void Start () {
-        EzExp.Instance.Load("hehehe");
+        EzExp.Instance.Load("The EzExp instance is working!");
 	}
 	
 	void Update () {
