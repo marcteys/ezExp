@@ -2,45 +2,48 @@
 using System.Diagnostics;
 using System.Threading;
 
-class EzTimer
+namespace UnityEzExp
 {
-    //TODO : creer un timermanager capable de lancer / arreter plusieurs timers 
-
-    Stopwatch timer = null;
-    string outputFormat = "";
-
-    EzTimer(bool autoStart = true, string format = "")
+    class EzTimer
     {
-        timer = new Stopwatch();
+        //TODO : creer un timermanager capable de lancer / arreter plusieurs timers 
+        Stopwatch timer = null;
+        string outputFormat = "";
 
-        outputFormat = format;
-        if (autoStart) Start();
-    }
-
-    
-    public void Start()
-    {
-        timer.Start();
-    }
-
-    public string Stop()
-    {
-        timer.Stop();
-        return GetTime();
-    }
-
-    public string GetTime(string format = null) // ++ format   
-    {
-        if (format != null)
+        EzTimer(bool autoStart = true, string format = "")
         {
-             // formater avec le nv format
-        } else
-        {
-            //formater avec le format defautl
+            timer = new Stopwatch();
+
+            outputFormat = format;
+            if (autoStart) Start();
         }
 
-        //TODO : destroy after it sent
-        return timer.Elapsed.ToString();
-    }
 
+        public void Start()
+        {
+            timer.Start();
+        }
+
+        public string Stop()
+        {
+            timer.Stop();
+            return GetTime();
+        }
+
+        public string GetTime(string format = null) // ++ format   
+        {
+            if (format != null)
+            {
+                // formater avec le nv format
+            }
+            else
+            {
+                //formater avec le format defautl
+            }
+
+            //TODO : destroy after it sent
+            return timer.Elapsed.ToString();
+        }
+
+    }
 }

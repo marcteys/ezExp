@@ -1,36 +1,36 @@
-﻿using UnityEngine;
-
-public static class Log
+﻿namespace UnityEzExp
 {
-
-    private static LogLevel _debugLevel;
-
-    public static void Error(object message)
+    public static class Log
     {
-        if ((int)_debugLevel <= (int)LogLevel.ERROR)
-            UnityEngine.Debug.LogError(message);
-    }
+        private static LogLevel _debugLevel;
 
-    public static void Warning(object message)
-    {
-        if ((int)_debugLevel <= (int)LogLevel.WARNING)
-            UnityEngine.Debug.LogWarning(message);
-    }
-    public static void Info(object message)
-    {
-        if ((int)_debugLevel <= (int)LogLevel.INFO)
-            UnityEngine.Debug.Log(message);
-    }
+        public static void Error(object message)
+        {
+            if ((int)_debugLevel <= (int)LogLevel.ERROR)
+                UnityEngine.Debug.LogError(message);
+        }
 
-    public static void Debug(object message)
-    {
-        if ((int)_debugLevel <= (int)LogLevel.DEBUG)
-            UnityEngine.Debug.Log(message);
-    }
+        public static void Warning(object message)
+        {
+            if ((int)_debugLevel <= (int)LogLevel.WARNING)
+                UnityEngine.Debug.LogWarning(message);
+        }
+        public static void Info(object message)
+        {
+            if ((int)_debugLevel <= (int)LogLevel.INFO)
+                UnityEngine.Debug.Log(message);
+        }
 
-    public static void SetLogLevel(LogLevel level)
-    {
-        _debugLevel = level;
-    }
+        public static void Debug(object message)
+        {
+            if ((int)_debugLevel <= (int)LogLevel.DEBUG)
+                UnityEngine.Debug.Log(message);
+        }
 
+        public static void SetLogLevel(LogLevel level)
+        {
+            _debugLevel = level;
+        }
+
+    }
 }
