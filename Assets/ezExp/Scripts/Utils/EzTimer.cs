@@ -1,37 +1,34 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Threading;
 
 namespace UnityEzExp
 {
     class EzTimer
     {
-        //TODO : creer un timermanager capable de lancer / arreter plusieurs timers 
-        Stopwatch timer = null;
-        string outputFormat = "";
+        public DateTime originalStartTime; // keep track on the same timer
+        public DateTime startTime;
+        public DateTime endTime;
 
-        EzTimer(bool autoStart = true, string format = "")
+        string outputFormat;
+
+        public EzTimer(DateTime originalStartTime, string format = "s.ffff")
         {
-            timer = new Stopwatch();
-
+        //    startTime = DateTime.Now.ToString("hh.mm.ss.ffffff");
             outputFormat = format;
-            if (autoStart) Start();
         }
-
 
         public void Start()
         {
-            timer.Start();
+            startTime = DateTime.Now; // it actually reset the time
         }
 
         public string Stop()
         {
-            timer.Stop();
             return GetTime();
         }
 
         public string GetTime(string format = null) // ++ format   
         {
+            DateTime now = DateTime.Now;
             if (format != null)
             {
                 // formater avec le nv format
@@ -42,7 +39,7 @@ namespace UnityEzExp
             }
 
             //TODO : destroy after it sent
-            return timer.Elapsed.ToString();
+            return "lol";
         }
 
     }

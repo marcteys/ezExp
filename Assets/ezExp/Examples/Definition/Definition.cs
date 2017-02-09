@@ -1,38 +1,41 @@
-﻿using System.Text;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEzExp;
 
-
 public class Definition : MonoBehaviour {
+
     public GameObject prefab;
     GameObject lastCube = null;
 
     public int trials = 10;
 
-    void Start () {
-        EzExp.Instance.SetParameters("columnName", "other", "lol");
-        EzExp.Instance.StartExperiment();
+    void Awake()
+    {
+        // GenerateNewCube();
+        EzExp.Instance.InitTrial();
+        EzExp.Instance.SetParameters("TECHNIQUE", "BLOCK_ID", "X", "Y", "DURATION");
     }
 
-    void Update () {
+    void Start()
+    {
+        EzExp.Instance.StartExperiment();
+    }
+    void Update()
+    {
         CheckClick();
     }
 
     void CheckClick()
     {
-        EzExp.Instance.StartTimer("timerName");
-
         if (Input.GetMouseButtonDown(0))
         { // if left button pressed...
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                if(hit.transform.gameObject == lastCube)
+                if (hit.transform.gameObject == lastCube)
                 {
-                    EzExp.Instance.SetValue("columnName", hit.point);
                     NextStep();
                 }
             }
@@ -42,13 +45,13 @@ public class Definition : MonoBehaviour {
 
     void NextStep()
     {
-        EzExp.Instance.EndTimer("timerName");
         Destroy(lastCube);
-        if(trials >0 )
+        if (trials > 0)
         {
             GenerateNewCube();
             trials += -1;
-        } else
+        }
+        else
         {
             Finished();
         }

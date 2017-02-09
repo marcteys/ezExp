@@ -5,6 +5,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using FileWriter;
+/* TODO :
+ * - Timer qui va du début a la fin  
+ * - Un système de "pause" automatique entre les Trials
+ * */
 
 namespace UnityEzExp
 {
@@ -113,7 +117,6 @@ namespace UnityEzExp
             trials = new ArrayList();
             currentTrialIndex = -1;
 
-
             List<List<string>> data = CsvFileReader.ReadAll(filepath, Encoding.UTF8);
             string[] header = data[0].ToArray();
             for (int i = 1; i < data.Count; i++)
@@ -133,10 +136,22 @@ namespace UnityEzExp
         /// <summary>
         /// Should be called when the experiment is over to check recording files (and display/throw some messages/events?)
         /// </summary>
-        public void EndExperiment() { }
+        public void EndExperiment()
+        {
+            /* TODO 
+             * - write the file
+             * - End all timers
+             * - clear trials
+             */
+
+        }
 
         #endregion
 
+
+        #region User
+
+        #endregion
 
         #region Trial
         /// <summary>
@@ -171,6 +186,12 @@ namespace UnityEzExp
                 throw new System.IndexOutOfRangeException();
             }
         }
+
+        public void InitTrial()
+        {
+
+        }
+
 
         /// <summary>
         /// Starts the loaded trial.
@@ -209,11 +230,25 @@ namespace UnityEzExp
             }
         }
 
+        /// <summary>
+        /// Return the current Trial
+        /// </summary>
+        /// <returns></returns>
+        public Trial GetCurrentTrial()
+        {
+            return trials[currentTrialIndex] as Trial;
+        }
+
+
         #endregion
 
         // If the input csv is not made, build one custom
         #region Simple 
 
+        /// <summary>
+        /// Define all parameters (columns) we want to use
+        /// </summary>
+        /// <param name="values">Udefined numer of values (columns)</param>
         public void SetParameters(params string[] values)
         {
             for(int i=0; i< values.Length;i++)
@@ -222,24 +257,45 @@ namespace UnityEzExp
             }
         }
 
+        /// <summary>
+        /// Set a value
+        /// </summary>
+        /// <param name="paramName">Param name (in column)</param>
+        /// <param name="value">Value to update</param>
         public void SetValue(string paramName, object value)
         {
             Debug.Log("Should cast value " + value + " to a string, but with a reformating of the comas ',' and add it in the column 'paramName'");
+            //TODO what happend in case of override ?
         }
-
-
         #endregion
 
         #region Timers 
-        public void StartTimer(string timerName)
+        /// <summary>
+        /// This should start automatically
+        /// </summary>
+        /// <param name="timerName"></param>
+        /// <param name="defaultFormat"></param>
+        public void StartTimer(string timerName, string defaultFormat = "")
         {
+            Trial currentTrial = GetCurrentTrial();
+            if (currentTrial != null)
+            {
 
+            } else
+            {
+
+            }
         }
 
         public string EndTimer(string timerName)
         {
-            return "timer value";
+            Trial currentTrial = GetCurrentTrial();
+
+            string timer = currentTrial.EndTimer(timerName);
+            return timer;
         }
+
+
         #endregion
     }
 }
