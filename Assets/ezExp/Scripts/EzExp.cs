@@ -143,9 +143,9 @@ namespace UnityEzExp
         /// <summary>
         /// Load the variables file to prepare the experiment and create an <see cref="UnityEzExp.Experiment"/> instance to store them.</summary>
         /// <param name="filepath">File path to load data from</param>
-        public void LoadFile(string filepath)
+		public void LoadFile(string filepath, string participantID, string participantsHeader = "USER_ID")
         {
-			_currentExperiment = new Experiment(filepath, "USER_ID", "0");
+			_currentExperiment = new Experiment(filepath, participantsHeader, participantID);
         }
 
         /// <summary>

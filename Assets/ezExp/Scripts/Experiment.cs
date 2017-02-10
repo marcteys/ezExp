@@ -22,7 +22,11 @@ namespace UnityEzExp
 	/// <summary>
 	/// Exception thrown while trying to access to a trial but none has been loaded yet.
 	/// </summary>
-	public class TrialNotLoadedException : Exception {};
+	public class TrialNotLoadedException: Exception {};
+	/// <summary>
+	/// Exception thrown if participants header was not found.
+	/// </summary>
+	public class ParticipantsHeaderNotFoundException: Exception {};
 	#endregion
 
 	/// <summary>
@@ -51,7 +55,7 @@ namespace UnityEzExp
 		FileType _fileType;
 
 		// name of the column containing participant IDs
-		string _participantHeader;
+		string _participantsHeader;
 		// ID of the current participant
 		string _participantID;
 
@@ -65,13 +69,15 @@ namespace UnityEzExp
 		/// <param name="inputFilePath">Input file path to load data from.</param>
 		/// <param name="participantHeader">Name of the column containing participants IDs.</param>
 		/// <param name="participantID">ID of the participant for whom we want to load experiment data.</param>
-		public Experiment(string inputFilePath, string participantHeader, string participantID, FileType fileType = FileType.CSV)
+		public Experiment(string inputFilePath, string participantsHeader, string participantID, FileType fileType = FileType.CSV)
         {
 			_inputFilePath = inputFilePath;
-			_participantHeader = participantHeader;
+			_participantsHeader = participantsHeader;
 			_participantID = participantID;
 			_fileType = fileType;
 			_currentTrialIndex = -1;
+
+			LoadFile(Encoding.UTF8);
         }
 		#endregion
 
@@ -95,11 +101,6 @@ namespace UnityEzExp
 		/// </summary>
 		/// <returns>The current trial index.</returns>
 		public int GetCurrentTrialIndex() { return _currentTrialIndex; }
-		/// <summary>
-		/// Sets the index of the current trial.
-		/// </summary>
-		/// <param name="currentTrialIndex">Current trial index.</param>
-		public void SetCurrentTrialIndex(int currentTrialIndex) { _currentTrialIndex = currentTrialIndex; }
 
 		/// <summary>
 		/// Add a trial to the list.
@@ -172,20 +173,19 @@ namespace UnityEzExp
         /// <returns>Return the first trial</returns>
 		void LoadCSV(Encoding encoding, char separation)
         {
-            // List<List<string>> data = CsvFileReader.ReadAll(EzExp.Instance.inputFile, Encoding.UTF8);
+			_trials = new List<Trial> ();
+
+			// read init file until the end
 			StreamReader reader = new StreamReader (_inputFilePath);
 			int lineIndex = 0;
-
-			_trials = new List<Trial> ();
-			// read init file until the end
 			while(!reader.EndOfStream) {
 				string line = reader.ReadLine ();
 				// lines starting with # are considered comments
-				if (line.StartsWith ("#")) { continue; } 
+				if (line.StartsWith ("#") || line.Trim() == "") { continue; } 
 				else {
 					// this should be the HEADER
 					if (lineIndex == 0) { 
-						_parameters = line.Split (separation); 
+						_parameters = line.Split (separation);
 						// remove useless spaces
 						for (int i = 0; i < _parameters.Length; i++) { _parameters[i] = _parameters [i].Trim (); }
 					}
@@ -193,7 +193,8 @@ namespace UnityEzExp
 					else {
 						string[] values = line.Split (separation);
 						// check if the trial corresponds to the user id 
-						int headerCol = Array.IndexOf<string>(_parameters, _participantHeader);
+						int headerCol = Array.IndexOf<string>(_parameters, _participantsHeader);
+						if(headerCol < 0) { throw new ParticipantsHeaderNotFoundException(); }
 						if (values [headerCol] == _participantID) {
 							_trials.Add (new Trial (this, values));
 						}
@@ -203,7 +204,7 @@ namespace UnityEzExp
 			}
 
 			// participant ID wasn't found
-			if (_trials.Count == 0) { throw new ParticipantIDNotFoundException(_participantID+" was not found in "+_participantHeader+" section in the loaded file. ("+_inputFilePath+")"); }
+			if (_trials.Count == 0) { throw new ParticipantIDNotFoundException(_participantID+" was not found in "+_participantsHeader+" section in the loaded file. ("+_inputFilePath+")"); }
         }
 
 		void LoadJSON(Encoding encoding)
@@ -256,10 +257,9 @@ namespace UnityEzExp
 		}
 		#endregion
 
-
 		#region trials
 		/// <summary>
-		/// Return the next trial in the list and increase the <see cref="UnityEzExp.Experiment._currentTrialIndex"/>. This should be called before <see cref="UnityEzExp.Experiment.StartTrial"/>.
+		/// Return the next trial in the list and increase the <see cref="UnityEzExp.Experiment._currentTrialIndex"/>. This or <see cref="UnityEzExp.Experiment.LoadTrial"/> should be called before <see cref="UnityEzExp.Experiment.StartTrial"/>.
 		/// </summary>
 		/// <returns>The trial.</returns>
 		public Trial LoadNextTrial()
@@ -271,6 +271,19 @@ namespace UnityEzExp
 			}
 		}
 
+
+		/// <summary>
+		/// Loads the trial at the given index. This or <see cref="UnityEzExp.Experiment.LoadNextTrial"/> should be called before <see cref="UnityEzExp.Experiment.StartTrial"/>.
+		/// </summary>
+		/// <returns>The trial.</returns>
+		/// <param name="index">Index.</param>
+		public Trial LoadTrial(int index) {
+			if(index < 0 || _trials.Count <= index) { throw new IndexOutOfRangeException(); }
+			_currentTrialIndex = index-1;
+			return LoadNextTrial();
+		}
+			
+
 		/// <summary>
 		/// Gets the current trial.
 		/// </summary>
@@ -280,6 +293,7 @@ namespace UnityEzExp
 			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
 			else { return _trials[_currentTrialIndex]; }
 		}
+
 
 		/// <summary>
 		/// Starts the current trial. A trial has to be loaded before calling this function (<see cref="UnityEzExp.Experiment.LoadNextTrial"/>).
@@ -294,6 +308,7 @@ namespace UnityEzExp
 			}
 		}
 
+
 		/// <summary>
 		/// Ends the current trial. A trial has to be started before calling this function (<see cref="UnityEzExp.Experiment.StartTrial"/>).
 		/// </summary>
@@ -306,6 +321,7 @@ namespace UnityEzExp
 				t.EndTrial();
 			}
 		}
+
 
 		/// <summary>
 		/// Records data about the trial. A trial has to be loaded before calling this function (<see cref="UnityEzExp.Experiment.LoadNextTrial"/>).
@@ -322,31 +338,6 @@ namespace UnityEzExp
 			}
 		}
 		#endregion
-
-
-        /*
-         * TODO : 
-         *         /// <summary>
-        /// Removes the attribute with the given name
-        /// </summary>
-        /// <returns><c>true</c>, if attribute was removed, <c>false</c> otherwise.</returns>
-        public bool RemoveParameter(string name)
-        {
-            bool res = _attributes.ContainsKey(name);
-            _attributes.Remove(name);
-            return res;
-        }
-
-        /// <summary>
-        /// Gets the attributes names.
-        /// </summary>
-        /// <returns>The attributes names.</returns>
-        public string[] GetParamterNames()
-        {
-            string[] res = new string[_attributes.Count];
-            _attributes.Keys.CopyTo(res, 0);
-            return res;
-        }*/
     }
 }
  

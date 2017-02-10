@@ -14,27 +14,24 @@ public class TestEzExp : MonoBehaviour {
     void Start () {
         // GenerateNewCube();
 		//EzExp.Instance.Load("Assets/ezExp/Examples/test_file.csv");
-		EzExp.Instance.LoadFile("Assets/ezExp/Examples/init_file.csv");
+		EzExp.Instance.LoadFile("Assets/ezExp/Examples/test_file.csv", "4");
     }
 	
 	void Update () {
         CheckClick();
 
-//		// L = Load next trial, S = Start trial, E = End trial
-//		if (Input.GetKeyUp (KeyCode.L)) { 
-//			try {
-//				Trial t = EzExp.Instance.LoadNextTrial (); 
-//				Log.Debug ("Trial loaded (" + t.ToString () + ")");
-//			} catch (System.IndexOutOfRangeException e) {
-//				Log.Debug ("No more trial to run");
-//			}
-//		} else if (Input.GetKeyUp (KeyCode.S)) {
-//			EzExp.Instance.StartTrial ();
-//			Log.Debug ("Trial started");
-//		} else if (Input.GetKeyUp (KeyCode.E)) {
-//			// Trial t = EzExp.Instance.EndTrial ();
-//		//	Log.Debug ("Trial ended ("+t.ToString(true)+")");
-//		}
+		// L = Load next trial, S = Start trial, E = End trial
+		if (Input.GetKeyUp (KeyCode.L)) { 
+			try {
+				Trial t = EzExp.Instance.LoadNextTrial (); 
+				Log.Debug ("Trial loaded (" + t.ToString (false) + ")");
+			} catch (AllTrialsPerformedException) { Log.Debug ("No more trial to run"); }
+		} else if (Input.GetKeyUp (KeyCode.S)) {
+			EzExp.Instance.StartTrial ();
+			Log.Debug ("Trial started");
+		} else if (Input.GetKeyUp (KeyCode.E)) {
+			EzExp.Instance.EndTrial ();
+		}
     }
 
     void CheckClick()

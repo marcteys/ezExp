@@ -185,13 +185,13 @@ namespace UnityEzExp
 			return added;
 		}
 
-        /*
+        
         /// <summary>
         /// Returns a string concatenating all attributes values.
         /// </summary>
         /// <param name="showTimers">Used to concatenate timers values at the end of the string.</param>
         /// <returns>A <see cref="System.String"/> that represents the current <see cref="Trial"/>.</returns>
-        public string ToString(bool showTimers = false)
+        public string ToString(bool showData = true)
         {
             // TODO should take output file format into account
 
@@ -201,19 +201,14 @@ namespace UnityEzExp
                 res += pair.Key + "=" + pair.Value + ";";
             }
 
-            if (showTimers)
-            {
-                // TODO : I do'nt understand that
-                /*
-                foreach (KeyValuePair<string, EzTimer> pair in _timers)
-                {
-                    float[] times = pair.Value;
-                    res += pair.Key + "=" + GetTimerDuration(pair.Key);
-                }*/
-           /* }
+			if(showData) {
+				foreach(KeyValuePair<string, string> p in _savedData) {
+					res += p.Key+"="+p.Value+";";
+				}
+			}
 
             return res.Substring(0, res.Length - 1);
-        }*/
+        }
         #endregion
     }
 }
