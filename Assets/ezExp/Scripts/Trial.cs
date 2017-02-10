@@ -28,9 +28,14 @@ namespace UnityEzExp
 
         #region attributes
         /// <summary>
-        /// List of values associated to parameters referenced in <see cref="UnityEzExp.Experiment"/> .
+        /// Array of values associated to parameters referenced in <see cref="UnityEzExp.Experiment"/> .
         /// </summary>
-        List<string> _parametersData = new List<string>();
+		string[] _parametersData;
+
+		/// <summary>
+		/// Dictionary used to save data about the trial dynamically.
+		/// </summary>
+		Dictionary<string, string> _savedData;
 
         /// <summary>
         /// Dictionary containing pairs representing starting and ending time of timers named as the dictionary key.
@@ -49,11 +54,12 @@ namespace UnityEzExp
         /// <summary>
         /// Default constructor that only adds a main timer to the timers dictionary.
         /// </summary>
-        public Trial(Experiment experiment, List<string> parametersData = null)
+        public Trial(Experiment experiment, string[] parametersData)
         {
             _parentExperiment = experiment;
             _parametersData = parametersData;
-            StartTimer("main");
+			// FIXME timer should be started on StartTrial()
+            // StartTimer("main");
         }
 
         /*
@@ -147,21 +153,37 @@ namespace UnityEzExp
         }
 
         /// <summary>
-        /// Start this trial (starts all timers by default and set state to started)
+        /// Starts this trial (starts all timers by default and set state to started).
         /// </summary>
         public void StartTrial()
         {
             if (_trialState != TrialState.NotStarted) { throw new TrialStateException("The trial has already been started"); }
-           // StartAllTimers();
+            // StartAllTimers();
             _trialState = TrialState.Started;
         }
 
+		/// <summary>
+		/// Ends the trial.
+		/// </summary>
         public void EndTrial()
         {
             if (_trialState != TrialState.Started) { throw new TrialStateException("The trial was not started yet"); }
-            EndTimer("main");
+            // EndTimer("main");
             _trialState = TrialState.Ended;
         }
+
+		/// <summary>
+		/// Saves data about the trial in the Dictionary <see cref="UnityEzExp.Trial._savedData"/>.
+		/// </summary>
+		/// <param name="name">Name of the data.</param>
+		/// <param name="value">Value of the data.</param>
+		/// <returns>Whether a new entry was added to the dictionary</returns>
+		public bool SaveTrialData(string name, string value)
+		{
+			bool added = _savedData.ContainsKey(name);
+			_savedData[name] = value;
+			return added;
+		}
 
         /*
         /// <summary>

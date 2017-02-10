@@ -35,11 +35,22 @@ namespace UnityEzExp
         TRIAL
     };
 
+    public enum ExperimentState
+    {
+        EMPTY, // All data stored in one signe file
+        HEADERLOADED, // Foreach new user, we save 
+        DATALOADED,
+        ENDED
+    };
+
+	/// <summary>
+	/// The <see cref="UnityEzExp.EzExp"/> class is used as an interface to the EzExp package. This only class has to be managed to use all functions. 
+	/// </summary>
     public class EzExp : MonoBehaviour
     {
 
         #region Exceptions
-        public class TrialNotLoadedException : Exception { };
+        public class ExperimentNotCreatedException : Exception { };
         #endregion
 
         #region Singleton
@@ -82,6 +93,11 @@ namespace UnityEzExp
         #endregion
 
         #region variables
+		/// <summary>
+		/// Current experiment managed by the API.
+		/// </summary>
+        Experiment _currentExperiment = null;
+
         public LogLevel logLevel = LogLevel.DEBUG;
 
         public SaveType saveType = SaveType.ALL;
@@ -105,29 +121,39 @@ namespace UnityEzExp
             DontDestroyOnLoad(this);
         }
 
-
-        void LoadExperiment()
+//        public Experiment NewExperiment(string filePath = null)
+//        {
+//            currentExperiment = new Experiment();
+//            if (filePath != null)
+//            {
+//                currentExperiment.LoadFile(filePath);
+//            } else
+//            {
+//
+//            }
+//            return currentExperiment;
+//        }
+        
+        public Experiment GetExperiment()
         {
+			if (_currentExperiment == null) { throw new ExperimentNotCreatedException (); }
 
+            return _currentExperiment;
         }
-
         /// <summary>
-        /// Load the variables file to prepare the experiment </summary>
+        /// Load the variables file to prepare the experiment and create an <see cref="UnityEzExp.Experiment"/> instance to store them.</summary>
         /// <param name="filepath">File path to load data from</param>
-        /// <seealso cref="SomeMethod(string)">
-        /// Notice the use of the cref attribute to reference a specific method </seealso>
-        public Trial LoadFile(string filepath)
+        public void LoadFile(string filepath)
         {
-            //TODO
-            return null;
+			_currentExperiment = new Experiment(filepath, "USER_ID", "0");
         }
 
         /// <summary>
         /// Launch at the very beginning of the experiment. Should load files containing exp data, prepare timers, get ready for recording
         /// </summary>
-        public void StartExperiment(bool autoGetUserId = false )
+        public Trial StartExperiment(bool autoGetUserId = false )
         {
-        //    NextTrial()
+           return LoadNextTrial();
         }
 
         /// <summary>
@@ -156,16 +182,7 @@ namespace UnityEzExp
         /// </summary>
         public Trial LoadNextTrial()
         {
-            /*
-            if (currentTrialIndex + 1 < trials.Count)
-            {
-                return trials[++currentTrialIndex] as Trial;
-            }
-            else
-            {
-                throw new System.IndexOutOfRangeException("No more trial to run.");
-            }*/
-            return null;
+			return _currentExperiment.LoadNextTrial();
         }
 
         /// <summary>
@@ -188,50 +205,21 @@ namespace UnityEzExp
                 return null;
         }
 
-        public void InitTrial()
-        {
-
-        }
-
 
         /// <summary>
         /// Starts the loaded trial.
         /// </summary>
         public void StartTrial()
         {
-            /*
-            if (currentTrialIndex == -1)
-            {
-                throw new TrialNotLoadedException();
-            }
-            else
-            {
-                // TODO start timer associated to that Trial
-                Trial ct = (Trial)trials[currentTrialIndex];
-                ct.StartTrial();
-            }*/
+			_currentExperiment.StartTrial();
         }
 
         /// <summary>
         /// Ends the loaded trial.
         /// </summary>
-        public Trial EndTrial()
+        public void EndTrial()
         {
-            /*
-            if (currentTrialIndex == -1)
-            {
-                throw new TrialNotLoadedException();
-            }
-            else
-            {
-                // TODO stop timer associated to the Trial and save results
-                Trial ct = (Trial)trials[currentTrialIndex];
-                ct.EndTrial();
-                // TODO record results
-
-                return ct;
-            }*/
-            return null;
+            _currentExperiment.EndTrial();
         }
 
 
@@ -242,7 +230,6 @@ namespace UnityEzExp
         /// <returns></returns>
         public string GetParameter(string parameterName)
         {
-            GetCurrentTrial();
             return "";
         }
 

@@ -14,7 +14,7 @@ public class Definition : MonoBehaviour {
     {
         // GenerateNewCube();
         // TODO  :
-        Trial currentTrial = EzExp.Instance.LoadFile("Assets/ezExp/Examples/test_file.csv");
+        // Trial currentTrial = EzExp.Instance.LoadFile("Assets/ezExp/Examples/test_file.csv");
         EzExp.Instance.SetParameters("X", "Y", "DURATION");
 
         switch(EzExp.Instance.GetParameter("TECHNIQUE"))
