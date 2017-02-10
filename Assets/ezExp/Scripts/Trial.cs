@@ -28,7 +28,7 @@ namespace UnityEzExp
 
         #region attributes
         /// <summary>
-        /// Dictionary containing attributes binding their names to their values.
+        /// List of values associated to parameters referenced in <see cref="UnityEzExp.Experiment"/> .
         /// </summary>
         List<string> _parametersData = new List<string>();
 

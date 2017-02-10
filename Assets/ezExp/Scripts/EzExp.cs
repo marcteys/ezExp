@@ -24,7 +24,8 @@ namespace UnityEzExp
     public enum FileType
     {
         CSV,
-        JSON
+        JSON,
+		XML
     };
 
     public enum SaveType
