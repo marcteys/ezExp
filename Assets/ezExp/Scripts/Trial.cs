@@ -24,6 +24,10 @@ namespace UnityEzExp
         /// Exception thrown when trying to end a trial that was not started
         /// </summary>
         public class TrialStateException : Exception { public TrialStateException(string msg) : base(msg) { } };
+		/// <summary>
+		/// Exception thrown if the trial was not bound to an experiment.
+		/// </summary>
+		public class NotExperimentBoundException: Exception {};
         #endregion
 
         #region Attributes
@@ -35,7 +39,7 @@ namespace UnityEzExp
 		/// <summary>
 		/// Dictionary used to save data about the trial dynamically.
 		/// </summary>
-		Dictionary<string, string> _savedData;
+		Dictionary<string, string> _savedData = new Dictionary<string, string>();
 
         /// <summary>
         /// Dictionary containing pairs representing starting and ending time of timers named as the dictionary key.
@@ -76,6 +80,43 @@ namespace UnityEzExp
         }
         */
         #endregion
+
+		#region getters/setters
+		/// <summary>
+		/// Gets the data for a given parameter
+		/// </summary>
+		/// <param name="parameter">Name of the parameter associated to the data.</param>
+		/// <returns>The data.</returns>
+		public string GetData(string parameter)
+		{
+			if(_parentExperiment == null) { throw new NotExperimentBoundException(); }
+			else {
+				int index = _parentExperiment.GetParameterIndex(parameter);
+				return _parametersData[index];
+			}
+		}
+
+		/// <summary>
+		/// Saves data about the trial in the Dictionary <see cref="UnityEzExp.Trial._savedData"/>.
+		/// </summary>
+		/// <param name="name">Name of the data.</param>
+		/// <param name="value">Value of the data.</param>
+		/// <returns>Whether a new entry was added to the dictionary</returns>
+		public bool SetResultData(string name, string value)
+		{
+			bool added = _savedData.ContainsKey(name);
+			_savedData[name] = value;
+			return added;
+		}
+
+
+		/// <summary>
+		/// Gets data of a given result.
+		/// </summary>
+		/// <returns>The result data.</returns>
+		/// <param name="name">Name of the result.</param>
+		public string GetResultData(string name) { return _savedData[name]; }
+		#endregion
 
         #region Functions
         /// <summary>
@@ -175,6 +216,7 @@ namespace UnityEzExp
         {
             if (_trialState != TrialState.NotStarted) { throw new TrialStateException("The trial has already been started"); }
             // StartAllTimers();
+			// StartTimer("main");
             _trialState = TrialState.Started;
         }
 
@@ -184,22 +226,9 @@ namespace UnityEzExp
         public void EndTrial()
         {
             if (_trialState != TrialState.Started) { throw new TrialStateException("The trial was not started yet"); }
-             EndTimer("main");
+            // EndTimer("main");
             _trialState = TrialState.Ended;
         }
-
-		/// <summary>
-		/// Saves data about the trial in the Dictionary <see cref="UnityEzExp.Trial._savedData"/>.
-		/// </summary>
-		/// <param name="name">Name of the data.</param>
-		/// <param name="value">Value of the data.</param>
-		/// <returns>Whether a new entry was added to the dictionary</returns>
-		public bool SaveTrialData(string name, string value)
-		{
-			bool added = _savedData.ContainsKey(name);
-			_savedData[name] = value;
-			return added;
-		}
 
         
         /// <summary>
@@ -207,21 +236,31 @@ namespace UnityEzExp
         /// </summary>
         /// <param name="showTimers">Used to concatenate timers values at the end of the string.</param>
         /// <returns>A <see cref="System.String"/> that represents the current <see cref="Trial"/>.</returns>
-        public string ToString(bool showData = true)
+		public string ToString(string separation = ";", bool showResults = true, bool showTimers = true)
         {
             // TODO should take output file format into account
 
             string res = "";
-            foreach (KeyValuePair<string, string> pair in _attributes)
+			string[] parametersNames;
+			_parentExperiment.GetParameters(out parametersNames);
+			for (int i = 0; i < _parametersData.Length; i++)
             {
-                res += pair.Key + "=" + pair.Value + ";";
+				res += parametersNames[i] +"="+ _parametersData[i] + separation;
             }
 
-			if(showData) {
+			// show the data recorded during the trial
+			if(showResults) {
 				foreach(KeyValuePair<string, string> p in _savedData) {
-					res += p.Key+"="+p.Value+";";
+					res += p.Key +"="+ p.Value+separation;
 				}
 			}
+
+			// TODO
+//			if(showTimers) {
+//				foreach(KeyValuePair<string, EzTimer> p in _timers) {
+					// res += p.Key +"="+ p.Value.GetTimeSeconds() + separation;
+//				}
+//			}
 
             return res.Substring(0, res.Length - 1);
         }

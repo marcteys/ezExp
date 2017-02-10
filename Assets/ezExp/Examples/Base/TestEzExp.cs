@@ -24,13 +24,25 @@ public class TestEzExp : MonoBehaviour {
 		if (Input.GetKeyUp (KeyCode.L)) { 
 			try {
 				Trial t = EzExp.Instance.LoadNextTrial (); 
-				Log.Debug ("Trial loaded (" + t.ToString (false) + ")");
+				Log.Debug ("Trial loaded (" + t.ToString () + ")");
+				string[] parameters;
+				EzExp.Instance.GetParameters(out parameters);
+
+//				for(int i = 0; i < parameters.Length; ++i) {
+//					Log.Debug(parameters[i]+" = "+EzExp.Instance.GetParameterData(parameters[i]));
+//				}
+
+				EzExp.Instance.SetResultData("blabla", "1");
+				EzExp.Instance.SetResultData("blibli", "2");
+				EzExp.Instance.SetResultData("bleble", "3");
+				EzExp.Instance.SetResultData("bloblo", "4");
 			} catch (AllTrialsPerformedException) { Log.Debug ("No more trial to run"); }
 		} else if (Input.GetKeyUp (KeyCode.S)) {
 			EzExp.Instance.StartTrial ();
 			Log.Debug ("Trial started");
 		} else if (Input.GetKeyUp (KeyCode.E)) {
 			EzExp.Instance.EndTrial ();
+			Log.Debug("Trial ended: "+ EzExp.Instance.GetCurrentTrial().ToString(","));
 		}
     }
 

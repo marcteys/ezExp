@@ -17,7 +17,7 @@ public class Definition : MonoBehaviour {
         // Trial currentTrial = EzExp.Instance.LoadFile("Assets/ezExp/Examples/test_file.csv");
         EzExp.Instance.SetParameters("X", "Y", "DURATION");
 
-        switch(EzExp.Instance.GetParameter("TECHNIQUE"))
+        switch(EzExp.Instance.GetParameterData("TECHNIQUE"))
         {
             case "A":
                 break;

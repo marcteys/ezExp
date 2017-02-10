@@ -116,11 +116,6 @@ namespace UnityEzExp
         public bool useStartScreen; // Si on est sur la scène de base, on charge le truc de base
         #endregion
 
-        #region Attributes
-        /// <summary>
-        /// Contains the list of trials for a given user. Should be emptied at the end of the experiment.
-        /// </summary>
-        #endregion
 
         #region Experiment
         void Awake()
@@ -176,6 +171,14 @@ namespace UnityEzExp
 
         }
 
+		/// <summary>
+		/// Gets the parameters of the experiment.
+		/// </summary>
+		public void GetParameters(out string[] parameters)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			else { _currentExperiment.GetParameters(out parameters); }
+		}
         #endregion
 
 
@@ -231,25 +234,50 @@ namespace UnityEzExp
 
 
         /// <summary>
-        /// 
+        /// Get data for a given parameter of the experiment.
         /// </summary>
-        /// <param name="parameterName"></param>
-        /// <returns></returns>
-        public string GetParameter(string parameterName)
+        /// <param name="parameter">Name of the parameter.</param>
+        /// <returns>The data associated.</returns>
+        public string GetParameterData(string parameter)
         {
-            return "";
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			Trial t = _currentExperiment.GetCurrentTrial();
+			return t.GetData(parameter);
         }
 
+
+		/// <summary>
+		/// Saves some results data in the current <see cref="UnityEzExp.Trial"/>.
+		/// </summary>
+		/// <param name="name">Name of the result.</param>
+		/// <param name="value">Value of the result.</param>
+		public void SetResultData(string name, string value)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			_currentExperiment.SetResultData(name, value);
+		}
+
+		/// <summary>
+		/// Gets data for a given result.
+		/// </summary>
+		/// <returns>The result data.</returns>
+		/// <param name="name">Name of the result.</param>
+		public string GetResultData(string name)
+		{
+			return _currentExperiment.GetResultData(name);
+		}
+
         /// <summary>
-        /// Return the current Trial
+		/// Return the <see	cref="UnityEzExp.Trial"/> currently loaded in the <see cref="UnityEzExp.Experiment"/> class.
         /// </summary>
         /// <returns></returns>
         public Trial GetCurrentTrial()
         {
-            return null;
-           // return trials[currentTrialIndex] as Trial;
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			return _currentExperiment.GetCurrentTrial();
         }
         #endregion
+
 
         // If the input csv is not made, build one custom
         #region Simple 

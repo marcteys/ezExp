@@ -27,6 +27,10 @@ namespace UnityEzExp
 	/// Exception thrown if participants header was not found.
 	/// </summary>
 	public class ParticipantsHeaderNotFoundException: Exception {};
+	/// <summary>
+	/// Exception thrown if a parameter was not found in the array <see cref="UnityEzExp.Experiment._parameters"/> .
+	/// </summary>
+	public class ParameterNotFoundException: Exception {};
 	#endregion
 
 	/// <summary>
@@ -83,17 +87,34 @@ namespace UnityEzExp
 
 		#region getters/setters
 		/// <summary>
-		/// Gets the parameters.
+		/// Feed the array given in argument of the parameters contained in <see cref="UnityEzExp.Experiment"/>.
 		/// </summary>
-		/// <returns>The parameters.</returns>
-		public string[] GetParameters() { return _parameters; }
+		/// <param name="parameters">Array in which all parameters will be copied.</param>
+		public void GetParameters(out string[] parameters) 
+		{
+			parameters = new string[_parameters.Length];
+			Array.Copy(_parameters, parameters, _parameters.Length);
+		}
 		/// <summary>
 		/// Sets the parameters.
 		/// </summary>
 		/// <param name="parameters">Parameters.</param>
-		public void SetParameters(string[] parameters) {  
+		public void SetParameters(string[] parameters) 
+		{  
 			_parameters = new string[parameters.Length];
-			for(int i = 0; i < parameters.Length; i++) { _parameters[i] = parameters[i]; }
+			Array.Copy(parameters, _parameters, parameters.Length);
+		}
+
+		/// <summary>
+		/// Gets the index of the given parameter in the array <see cref="UnityEzExp.Experiment._parameters"/>
+		/// </summary>
+		/// <returns>The parameter index.</returns>
+		/// <param name="parameter">Name of the parameter to find.</param>
+		public int GetParameterIndex(string parameter) 
+		{ 
+			int index = Array.IndexOf(_parameters, parameter);
+			if(index < 0) { throw new ParameterNotFoundException(); }
+			return index; 
 		}
 
 		/// <summary>
@@ -328,13 +349,23 @@ namespace UnityEzExp
 		/// </summary>
 		/// <param name="name">Name of the data.</param>
 		/// <param name="value">Value of the data.</param>
-		public void RecordTrialData(string name, string value)
+		public void SetResultData(string name, string value)
 		{
 			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
 			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
-			else {
-				Trial t = _trials[_currentTrialIndex];
-			}
+			else { _trials[_currentTrialIndex].SetResultData(name, value); }
+		}
+
+		/// <summary>
+		/// Gets data of a given result data.
+		/// </summary>
+		/// <returns>Data associated to the result</returns>
+		/// <param name="name">Name of the result.</param>
+		public string GetResultData(string name)
+		{
+			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
+			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
+			else { return _trials[_currentTrialIndex].GetResultData(name); }
 		}
 		#endregion
     }
