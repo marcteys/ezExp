@@ -13,8 +13,18 @@ public class Definition : MonoBehaviour {
     void Awake()
     {
         // GenerateNewCube();
-        EzExp.Instance.InitTrial();
-        EzExp.Instance.SetParameters("TECHNIQUE", "BLOCK_ID", "X", "Y", "DURATION");
+        // TODO  :
+        Trial currentTrial = EzExp.Instance.LoadFile("Assets/ezExp/Examples/test_file.csv");
+        EzExp.Instance.SetParameters("X", "Y", "DURATION");
+
+        switch(EzExp.Instance.GetParameter("TECHNIQUE"))
+        {
+            case "A":
+                break;
+            case "B":
+                break;
+
+        }
     }
 
     void Start()

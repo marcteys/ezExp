@@ -13,7 +13,7 @@ public class TestEzExp : MonoBehaviour {
 
     void Start () {
         // GenerateNewCube();
-		EzExp.Instance.Load("Assets/ezExp/Examples/test_file.csv");
+		//EzExp.Instance.Load("Assets/ezExp/Examples/test_file.csv");
     }
 	
 	void Update () {
@@ -32,7 +32,7 @@ public class TestEzExp : MonoBehaviour {
 			Log.Debug ("Trial started");
 		} else if (Input.GetKeyUp (KeyCode.E)) {
 			Trial t = EzExp.Instance.EndTrial ();
-			Log.Debug ("Trial ended ("+t.ToString(true)+")");
+		//	Log.Debug ("Trial ended ("+t.ToString(true)+")");
 		}
     }
 

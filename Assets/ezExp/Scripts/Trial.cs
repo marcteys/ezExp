@@ -30,7 +30,7 @@ namespace UnityEzExp
         /// <summary>
         /// Dictionary containing attributes binding their names to their values.
         /// </summary>
-        Dictionary<string, string> _attributes = new Dictionary<string, string>();
+        List<string> _parametersData = new List<string>();
 
         /// <summary>
         /// Dictionary containing pairs representing starting and ending time of timers named as the dictionary key.
@@ -40,60 +40,23 @@ namespace UnityEzExp
 
         public enum TrialState { NotStarted, Started, Ended };
         TrialState _trialState = TrialState.NotStarted;
+
+        Experiment _parentExperiment = null;
+
         #endregion
 
         #region constructors
         /// <summary>
         /// Default constructor that only adds a main timer to the timers dictionary.
         /// </summary>
-        public Trial(string[] attributes = null, string[] values = null)
+        public Trial(Experiment experiment, List<string> parametersData = null)
         {
+            _parentExperiment = experiment;
+            _parametersData = parametersData;
             StartTimer("main");
         }
 
         /*
-        /// <summary>
-        /// Create a new <see cref="Trial"/> with the given attributes
-        /// </summary>
-        /// <param name="attributes">Attributes names</param>
-        public Trial(string[] attributes) : this()
-        {
-            _attributes = new Dictionary<string, string>();
-            foreach (string attr in attributes)
-            {
-                _attributes.Add(attr, "");
-            }
-        }
-
-        /// <summary>
-        /// Create a new <see cref="Trial"/> with the given attributes and values associated. 
-        /// </summary>
-        /// <param name="attributes">Attributes names</param>
-        /// <param name="values">Attributes values</param>
-        public Trial(string[] attributes, string[] values) : this()
-        {
-            if (attributes.Length != values.Length) { throw new DifferentSizeException("Attributes (" + attributes.Length + ") and Values (" + values.Length + ") array don't match in length"); }
-            for (int i = 0; i < attributes.Length; i++)
-            {
-                _attributes.Add(attributes[i], values[i]);
-            }
-        }
-
-        /// <summary>
-        /// Create a new <see cref="Trial"/> with the given attributes and values associated. Also create timers that would be used for this trial.
-        /// </summary>
-        /// <param name="attributes">Names of the attributes.</param>
-        /// <param name="values">Values of these attributes.</param>
-        /// <param name="timers">Names of the timers used for this Trial.</param>
-        public Trial(string[] attributes, string[] values, string[] timers) : this(attributes, values)
-        {
-            /*
-            foreach (string name in timers)
-            {
-                AddTimer(name);
-            }*/
-       /* }
-    */
         /// <summary>
         /// Create a new <see cref="Trial"/> by copying the given attributes dictionary (name -> value)
         /// </summary>
@@ -105,75 +68,10 @@ namespace UnityEzExp
                 _attributes.Add(pair.Key, pair.Value);
             }
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Trial"/> class based on another instance of it.
-        /// </summary>
-        /// <param name="toCopy">Other <see cref="Trial"/> instance to copy.</param>
-        /*
-        public Trial(Trial toCopy) : this()
-        {
-            foreach (KeyValuePair<string, string> pair in toCopy._attributes)
-            {
-                _attributes.Add(pair.Key, pair.Value);
-            }
-
-            foreach (KeyValuePair<string, float[]> pair in toCopy._timers)
-            {
-                _timers.Add(pair.Key, pair.Value);
-            }
-        }
         */
         #endregion
 
         #region functions
-        /// <summary>
-        /// Add a new attribute to the dictionary.
-        /// </summary>
-        /// <returns>
-        /// True if the attribute is created in the dictionary, False if it has be overriden
-        /// </returns>
-        /// <param name="name">Name of the attribute to add</param>
-        public bool AddAttribute(string name) { return AddAttribute(name, ""); }
-
-        /// <summary>
-        /// Add a new attribute to the dictionary with the given value
-        /// </summary>
-        /// <returns>
-        /// True if the attribute is created in the dictionary, False if it has be overriden
-        /// </returns>
-        /// <param name="name">Name of the attribute to add</param>
-        /// <param name="value">Value of this attribute</param>
-        public bool AddAttribute(string name, string value)
-        {
-            bool res = _attributes.ContainsKey(name);
-            if (res) { _attributes.Remove(name); }
-            _attributes.Add(name, value);
-            return res;
-        }
-
-        /// <summary>
-        /// Removes the attribute with the given name
-        /// </summary>
-        /// <returns><c>true</c>, if attribute was removed, <c>false</c> otherwise.</returns>
-        public bool RemoveAttribute(string name)
-        {
-            bool res = _attributes.ContainsKey(name);
-            _attributes.Remove(name);
-            return res;
-        }
-
-        /// <summary>
-        /// Gets the attributes names.
-        /// </summary>
-        /// <returns>The attributes names.</returns>
-        public string[] GetAttributesNames()
-        {
-            string[] res = new string[_attributes.Count];
-            _attributes.Keys.CopyTo(res, 0);
-            return res;
-        }
-
         /// <summary>
         /// Add a timer to the dictionary with a given name that will be used to access it in the future.
         /// </summary>
@@ -265,6 +163,7 @@ namespace UnityEzExp
             _trialState = TrialState.Ended;
         }
 
+        /*
         /// <summary>
         /// Returns a string concatenating all attributes values.
         /// </summary>
@@ -289,10 +188,10 @@ namespace UnityEzExp
                     float[] times = pair.Value;
                     res += pair.Key + "=" + GetTimerDuration(pair.Key);
                 }*/
-            }
+           /* }
 
             return res.Substring(0, res.Length - 1);
-        }
+        }*/
         #endregion
     }
 }

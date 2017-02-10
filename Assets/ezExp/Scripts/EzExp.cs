@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using FileWriter;
 /* TODO :
  * - Timer qui va du début a la fin  
  * - Un système de "pause" automatique entre les Trials
@@ -22,6 +21,11 @@ namespace UnityEzExp
         NONE
     };
 
+    public enum FileType
+    {
+        CSV,
+        JSON
+    };
 
     public enum SaveType
     {
@@ -33,7 +37,7 @@ namespace UnityEzExp
     public class EzExp : MonoBehaviour
     {
 
-        #region exceptions
+        #region Exceptions
         public class TrialNotLoadedException : Exception { };
         #endregion
 
@@ -88,18 +92,11 @@ namespace UnityEzExp
         public bool useStartScreen; // Si on est sur la scène de base, on charge le truc de base
         #endregion
 
-        #region attributes
+        #region Attributes
         /// <summary>
         /// Contains the list of trials for a given user. Should be emptied at the end of the experiment.
         /// </summary>
-        static ArrayList trials;
-
-        /// <summary>
-        /// Index of the current trial.
-        /// </summary>
-        static int currentTrialIndex = -1;
         #endregion
-
 
         #region Experiment
         void Awake()
@@ -107,31 +104,30 @@ namespace UnityEzExp
             DontDestroyOnLoad(this);
         }
 
+
+        void LoadExperiment()
+        {
+
+        }
+
         /// <summary>
         /// Load the variables file to prepare the experiment </summary>
         /// <param name="filepath">File path to load data from</param>
         /// <seealso cref="SomeMethod(string)">
         /// Notice the use of the cref attribute to reference a specific method </seealso>
-        public void Load(string filepath)
+        public Trial LoadFile(string filepath)
         {
-            trials = new ArrayList();
-            currentTrialIndex = -1;
-
-            List<List<string>> data = CsvFileReader.ReadAll(filepath, Encoding.UTF8);
-            string[] header = data[0].ToArray();
-            for (int i = 1; i < data.Count; i++)
-            {
-                string[] line = data[i].ToArray();
-                Trial trial = new Trial(header, line);
-                Log.Debug(trial.ToString());
-                trials.Add(trial);
-            }
+            //TODO
+            return null;
         }
 
         /// <summary>
         /// Launch at the very beginning of the experiment. Should load files containing exp data, prepare timers, get ready for recording
         /// </summary>
-        public void StartExperiment(bool autoGetUserId = false ) { }
+        public void StartExperiment(bool autoGetUserId = false )
+        {
+        //    NextTrial()
+        }
 
         /// <summary>
         /// Should be called when the experiment is over to check recording files (and display/throw some messages/events?)
@@ -159,6 +155,7 @@ namespace UnityEzExp
         /// </summary>
         public Trial LoadNextTrial()
         {
+            /*
             if (currentTrialIndex + 1 < trials.Count)
             {
                 return trials[++currentTrialIndex] as Trial;
@@ -166,7 +163,8 @@ namespace UnityEzExp
             else
             {
                 throw new System.IndexOutOfRangeException("No more trial to run.");
-            }
+            }*/
+            return null;
         }
 
         /// <summary>
@@ -176,6 +174,7 @@ namespace UnityEzExp
         /// <returns>The trial.</returns>
         public Trial LoadTrial(int trialIndex)
         {
+            /*
             if (0 <= trialIndex && trialIndex < trials.Count)
             {
                 currentTrialIndex = trialIndex;
@@ -184,7 +183,8 @@ namespace UnityEzExp
             else
             {
                 throw new System.IndexOutOfRangeException();
-            }
+            }*/
+                return null;
         }
 
         public void InitTrial()
@@ -198,6 +198,7 @@ namespace UnityEzExp
         /// </summary>
         public void StartTrial()
         {
+            /*
             if (currentTrialIndex == -1)
             {
                 throw new TrialNotLoadedException();
@@ -207,7 +208,7 @@ namespace UnityEzExp
                 // TODO start timer associated to that Trial
                 Trial ct = (Trial)trials[currentTrialIndex];
                 ct.StartTrial();
-            }
+            }*/
         }
 
         /// <summary>
@@ -215,6 +216,7 @@ namespace UnityEzExp
         /// </summary>
         public Trial EndTrial()
         {
+            /*
             if (currentTrialIndex == -1)
             {
                 throw new TrialNotLoadedException();
@@ -227,7 +229,20 @@ namespace UnityEzExp
                 // TODO record results
 
                 return ct;
-            }
+            }*/
+            return null;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="parameterName"></param>
+        /// <returns></returns>
+        public string GetParameter(string parameterName)
+        {
+            GetCurrentTrial();
+            return "";
         }
 
         /// <summary>
@@ -236,15 +251,13 @@ namespace UnityEzExp
         /// <returns></returns>
         public Trial GetCurrentTrial()
         {
-            return trials[currentTrialIndex] as Trial;
+            return null;
+           // return trials[currentTrialIndex] as Trial;
         }
-
-
         #endregion
 
         // If the input csv is not made, build one custom
         #region Simple 
-
         /// <summary>
         /// Define all parameters (columns) we want to use
         /// </summary>
@@ -294,7 +307,6 @@ namespace UnityEzExp
             string timer = currentTrial.EndTimer(timerName);
             return timer;
         }
-
 
         #endregion
     }
