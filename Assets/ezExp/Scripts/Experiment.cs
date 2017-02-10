@@ -318,7 +318,6 @@ namespace UnityEzExp
 			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
 			else {
 				Trial t = _trials[_currentTrialIndex];
-
 			}
 		}
 		#endregion
