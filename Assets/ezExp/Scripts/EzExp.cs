@@ -43,9 +43,16 @@ namespace UnityEzExp
         ENDED
     };
 
-	/// <summary>
-	/// The <see cref="UnityEzExp.EzExp"/> class is used as an interface to the EzExp package. This only class has to be managed to use all functions. 
-	/// </summary>
+    public enum TimeFormat
+    {
+        MILLISECONDS, 
+        SECONDS,
+        MINUTES
+    };
+
+    /// <summary>
+    /// The <see cref="UnityEzExp.EzExp"/> class is used as an interface to the EzExp package. This only class has to be managed to use all functions. 
+    /// </summary>
     public class EzExp : MonoBehaviour
     {
 

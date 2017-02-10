@@ -11,7 +11,7 @@ namespace UnityEzExp
     public class Trial
     {
 
-        #region exceptions
+        #region Exceptions
         /// <summary>
         /// Exception thrown when attributes and values array have different sizes.
         /// </summary>
@@ -26,7 +26,7 @@ namespace UnityEzExp
         public class TrialStateException : Exception { public TrialStateException(string msg) : base(msg) { } };
         #endregion
 
-        #region attributes
+        #region Attributes
         /// <summary>
         /// Array of values associated to parameters referenced in <see cref="UnityEzExp.Experiment"/> .
         /// </summary>
@@ -50,7 +50,7 @@ namespace UnityEzExp
 
         #endregion
 
-        #region constructors
+        #region Constructors
         /// <summary>
         /// Default constructor that only adds a main timer to the timers dictionary.
         /// </summary>
@@ -77,7 +77,7 @@ namespace UnityEzExp
         */
         #endregion
 
-        #region functions
+        #region Functions
         /// <summary>
         /// Add a timer to the dictionary with a given name that will be used to access it in the future.
         /// </summary>
@@ -94,23 +94,27 @@ namespace UnityEzExp
                 _timers.Remove(name);
                 Log.Warning("A timer with the name <color=#f500f5>" + name + "</color> already exist. Remocing");
             }
-            _timers.Add(name, new EzTimer(GetExistingTimer("name").originalStartTime));
+            _timers.Add(name, new EzTimer(GetExistingTimer("name")._originalStartTime));
         }
 
         /// <summary>
         /// Ends the timer with the given name
         /// </summary>
         /// <param name="name">Name of the timer.</param>
-        public string EndTimer(string name)
+        public string EndTimer(string name, TimeFormat format = TimeFormat.MINUTES)
         {
-            if (GetExistingTimer(name) != null)
+            EzTimer timer = GetExistingTimer(name);
+            if (timer != null)
             {
-                return "";
+                string time = timer.GetTime(format);
+                RemoveTimer(name);
+                return time;
             }
             else
             {
-                return "";
+                return "ERROR // TODO";
             }
+
         }
 
         /// <summary>
@@ -119,14 +123,15 @@ namespace UnityEzExp
         /// <param name="name">Name of the timer.</param>
         public float GetTimerDuration(string name)
         {
-            /*
-            if (!_timers.ContainsKey(name)) { throw new KeyNotFoundException(); }
-            float[] times = _timers[name];
-            if (times[0] == times[1]) { throw new TimerNotEndedException("Timer " + name + " started at (" + times[0] + ") and never finished"); }
-            return times[1] - times[0];*/
-            return 0;
+            EzTimer timer = GetExistingTimer(name);
+            if (timer != null)
+            {
+                return timer.GetTimeSeconds();
+            } else
+            {
+                return 0; // todo : redo
+            }
         }
-
 
         /// <summary>
         /// Used to 
@@ -139,6 +144,17 @@ namespace UnityEzExp
             if (!_timers.ContainsKey(timerName)) { throw new KeyNotFoundException(); }
             _timers.TryGetValue(timerName, out existingTimer);
             return existingTimer;
+        }
+
+        /// <summary>
+        /// Used to 
+        /// </summary>
+        /// <param name="timerName"></param>
+        /// <returns></returns>
+        bool RemoveTimer(string timerName)
+        {
+            _timers.Remove(timerName);
+            return true;
         }
 
         /// <summary>
@@ -168,7 +184,7 @@ namespace UnityEzExp
         public void EndTrial()
         {
             if (_trialState != TrialState.Started) { throw new TrialStateException("The trial was not started yet"); }
-            // EndTimer("main");
+             EndTimer("main");
             _trialState = TrialState.Ended;
         }
 

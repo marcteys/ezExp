@@ -4,21 +4,19 @@ namespace UnityEzExp
 {
     class EzTimer
     {
-        public DateTime originalStartTime; // keep track on the same timer
-        public DateTime startTime;
-        public DateTime endTime;
+        public TimeSpan _originalStartTime; // keep track on the same timer
+        public double startTime;
+        public double endTime;
 
-        string outputFormat;
-
-        public EzTimer(DateTime originalStartTime, string format = "s.ffff")
+        public EzTimer(TimeSpan originalStartTime)
         {
-        //    startTime = DateTime.Now.ToString("hh.mm.ss.ffffff");
-            outputFormat = format;
+            Start();
+            _originalStartTime = originalStartTime;
         }
 
         public void Start()
         {
-            startTime = DateTime.Now; // it actually reset the time
+            startTime = _originalStartTime.TotalMilliseconds; 
         }
 
         public string Stop()
@@ -26,20 +24,37 @@ namespace UnityEzExp
             return GetTime();
         }
 
-        public string GetTime(string format = null) // ++ format   
+        public float GetTimeSeconds()
         {
-            DateTime now = DateTime.Now;
-            if (format != null)
-            {
-                // formater avec le nv format
-            }
-            else
-            {
-                //formater avec le format defautl
-            }
+            endTime = _originalStartTime.TotalMilliseconds;
 
-            //TODO : destroy after it sent
-            return "lol";
+            TimeSpan total = TimeSpan.FromMilliseconds(endTime - startTime);
+
+            return (float)total.TotalSeconds;
+        }
+
+        public string GetTime(TimeFormat format = TimeFormat.MINUTES)
+        {
+            endTime = _originalStartTime.TotalMilliseconds;
+
+            TimeSpan total = TimeSpan.FromMilliseconds(endTime - startTime);
+            string formatedValue = "";
+            switch (format) // TODO  : Do something with format
+            {
+                case TimeFormat.MILLISECONDS:
+                    formatedValue = total.TotalMilliseconds.ToString(); ;
+                    break;
+                case TimeFormat.SECONDS:
+                    if(total.Minutes > 0)
+                        formatedValue = total.Minutes + ":" + total.Seconds + "." + total.Milliseconds;
+                    else
+                        formatedValue = total.Seconds + "." + total.Milliseconds;
+                    break;
+                case TimeFormat.MINUTES:
+                    formatedValue = total.Minutes  +  ":" + total.Seconds + "." + total.Milliseconds;
+                    break;
+            }
+            return formatedValue;
         }
 
     }
