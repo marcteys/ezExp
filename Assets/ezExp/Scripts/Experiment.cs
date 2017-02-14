@@ -33,6 +33,25 @@ namespace UnityEzExp
 	public class ParameterNotFoundException: Exception {};
 	#endregion
 
+	#region enum
+	/// <summary>
+	/// Recording behavior that can be set by the user depending on its need.
+	/// </summary>
+	public enum RecordBehavior
+	{
+		SaveOnTrialEnd,
+		SaveOnUserDemand
+	};
+
+	public enum FileType
+	{
+		CSV,
+		JSON,
+		XML
+	};
+	#endregion
+
+
 	/// <summary>
 	/// The class <see cref="UnityEzExp.Experiment"/> is used to Load and Save data about the experiment configuration. At the beginning, it will load data from a .csv, .xml or .json file 
 	/// and will save the results in an output file 
@@ -43,7 +62,12 @@ namespace UnityEzExp
         /// <summary>
         /// Parameters are the "header" of the file
         /// </summary>
-		public string[] _parameters;
+		string[] _parameters;
+
+		/// <summary>
+		/// Name of the results to display in the recorded files.
+		/// </summary>
+		List<string> _results = new List<string>();
 
 		/// <summary>
 		/// List of all trials for a given user
@@ -52,11 +76,12 @@ namespace UnityEzExp
         
 		// paths of files to load and save data
 		string _inputFilePath;
+		FileType _inputFileType = FileType.CSV;
 		string _outputFilePath;
-		/// <summary>
-		/// Type of files to handle. For now, all files (input or output share the same format).
-		/// </summary>
-		FileType _fileType;
+		FileType _outputFileType = FileType.XML;
+
+
+		RecordBehavior _recordBehavior = RecordBehavior.SaveOnTrialEnd;
 
 		// name of the column containing participant IDs
 		string _participantsHeader;
@@ -73,12 +98,13 @@ namespace UnityEzExp
 		/// <param name="inputFilePath">Input file path to load data from.</param>
 		/// <param name="participantHeader">Name of the column containing participants IDs.</param>
 		/// <param name="participantID">ID of the participant for whom we want to load experiment data.</param>
-		public Experiment(string inputFilePath, string participantsHeader, string participantID, FileType fileType = FileType.CSV)
+		public Experiment(string inputFilePath, string participantsHeader, string participantID, FileType inputFileType = FileType.CSV, FileType outputFileType = FileType.CSV)
         {
 			_inputFilePath = inputFilePath;
 			_participantsHeader = participantsHeader;
 			_participantID = participantID;
-			_fileType = fileType;
+			_inputFileType = inputFileType;
+			_outputFileType = outputFileType;
 			_currentTrialIndex = -1;
 
 			LoadFile(Encoding.UTF8);
@@ -118,6 +144,24 @@ namespace UnityEzExp
 		}
 
 		/// <summary>
+		/// Returns the results name.
+		/// </summary>
+		/// <returns>The list of results name to an array.</returns>
+		public string[] GetResults() { return _results.ToArray(); }
+
+		/// <summary>
+		/// Set the results header for record. This function should be called before saving trials data to ensure good formatting of the output data.
+		/// </summary>
+		/// <param name="results">Names of the results data.</param>
+		public void SetResults(string[] results)
+		{
+			_results = new List<string>();
+			for(int i = 0; i < results.Length; i++) {
+				_results.Add(results[i]);
+			}
+		}
+
+		/// <summary>
 		/// Gets the index of the current trial.
 		/// </summary>
 		/// <returns>The current trial index.</returns>
@@ -143,6 +187,19 @@ namespace UnityEzExp
 			foreach (Trial t in trials) { _trials.Add(t); }
 		}
 
+
+		/// <summary>
+		/// Sets the output file path.
+		/// </summary>
+		/// <param name="outputFilePath">Output file path.</param>
+		public void SetOutputFilePath(string outputFilePath) { _outputFilePath = outputFilePath; }
+
+		/// <summary>
+		/// Sets the record behavior.
+		/// </summary>
+		/// <param name="behavior">Behavior to adopt.</param>
+		public void SetRecordBehavior(RecordBehavior behavior) { _recordBehavior = behavior; }
+
 		// FIXME should not allow that kind of behavior -> parameters are fixed in the init file
 //		/// <summary>
 //		/// Add a list of undefined number of parameters manually
@@ -166,7 +223,7 @@ namespace UnityEzExp
 
 		#region load/save
 		/// <summary>
-		/// Load data from a file, with the provided format. Possibility to specify the separation character in .csv files.
+		/// Load data from a file, with the provided format. Possibility to specify the separation character in .csv files. Parameters header will be instantiated here.
 		/// </summary>
 		/// <param name="filePath">File path.</param>
 		/// <param name="fileType">Format of the file to parse.</param>
@@ -174,7 +231,7 @@ namespace UnityEzExp
 		/// <param name="separation">Separation character used in .csv files.</param>
 		public void LoadFile(Encoding encoding, char separation = ',')
         {
-            switch(_fileType)
+            switch(_inputFileType)
             {
                 case FileType.CSV:
                     LoadCSV(encoding, separation);
@@ -205,7 +262,7 @@ namespace UnityEzExp
 				if (line.StartsWith ("#") || line.Trim() == "") { continue; } 
 				else {
 					// this should be the HEADER
-					if (lineIndex == 0) { 
+					if (lineIndex == 0) {
 						_parameters = line.Split (separation);
 						// remove useless spaces
 						for (int i = 0; i < _parameters.Length; i++) { _parameters[i] = _parameters [i].Trim (); }
@@ -247,34 +304,105 @@ namespace UnityEzExp
 		/// </summary>
 		/// <param name="encoding">Encoding of the file.</param>
 		/// <param name="separation">Separation characters use for .csv format.</param>
-		public void SaveCurrentTrial(Encoding encoding, string separation = ",")
+		public void SaveCurrentTrial(Encoding encoding, char separation = ',')
 		{
-			switch (_fileType) {
+			if(_outputFilePath == null || _outputFilePath == "") { throw new IOException("No output file path specified: impossible to record data."); }
+
+			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
+			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); }
+
+			// warn in case the results header is not set
+			if (_results.Count == 0) { Log.Warning("The results header has not been set. Trials saved data might be wrongly formatted."); }
+
+			switch (_outputFileType) {
 			case FileType.CSV:
-				SaveCurrentTrialCSV ();
+				SaveCurrentTrialCSV (encoding, separation);
 				break;
 			case FileType.JSON:
-				SaveCurrentTrialJSON ();
+				SaveCurrentTrialJSON (encoding);
 				break;
 			case FileType.XML:
-				SaveCurrentTrialXML ();
+				SaveCurrentTrialXML (encoding);
 				break;
 			}
 		}
 
-		void SaveCurrentTrialCSV() 
+		/// <summary>
+		/// Saves the current trial in a .csv file. If the file does not exist yet, it will be created and the header added at the beginning.
+		/// </summary>
+		/// <param name="encoding">Encoding of the file.</param>
+		void SaveCurrentTrialCSV(Encoding encoding, char separation) 
+		{
+			if (_results.Count == 0) { Log.Warning("The results header has not been set. Trials saved data might be wrongly formatted."); }
+			Trial t = _trials[_currentTrialIndex];
+
+			bool created = !File.Exists(_outputFilePath);
+			// let exception flows if needs be
+			StreamWriter writer = new StreamWriter(_outputFilePath, true);
+			// write header at beginning of the file
+			if(created) {
+				string first = string.Join(separation+"", _parameters);
+				if(_results.Count > 0) { first += separation + string.Join(separation+"", _results.ToArray()); }
+				writer.WriteLine(first);
+			} 
+
+			// save parameters of this trial first
+			string toRecord = string.Join(separation+"", t.GetAllData());
+			// save all results saved for this trial
+			Dictionary<string, string> savedData = t.GetResultsData();
+			if(savedData.Count > 0) {
+				if(_results.Count > 0) {
+					// need to order data according to _results header
+					string[] toWrite = new string[_results.Count];
+					// order elements to write them in a formatted order in the record file
+					int index = 0;
+					foreach(KeyValuePair<string, string> p in savedData) {
+						toWrite[_results.IndexOf(p.Key)] = p.Value;
+						toRecord += separation+"{"+(index++)+"}";
+					}
+					toRecord = string.Format(toRecord, toWrite);
+				} 
+				// order does not matter if the results header was provided
+				else {
+					foreach(string v in savedData.Values) { toRecord += separation+v; }
+				}
+			}
+			writer.WriteLine(toRecord);
+			writer.Close();
+		}
+
+		void SaveCurrentTrialJSON(Encoding encoding) 
 		{ 
 			// TODO 
 		}
 
-		void SaveCurrentTrialJSON() 
+		void SaveCurrentTrialXML(Encoding encoding) 
 		{ 
-			// TODO 
-		}
+			Trial t = _trials[_currentTrialIndex];
 
-		void SaveCurrentTrialXML() 
-		{ 
-			// TODO 
+			StreamWriter writer = new StreamWriter(_outputFilePath);
+
+			string toRecord = "<trial";
+			// first record all parameters
+			foreach(string p in _parameters) { toRecord += " "+p+"=\""+t.GetData(p)+"\""; }
+
+			Dictionary<string, string> savedData = t.GetResultsData();
+			if(savedData.Count > 0) {
+				if(_results.Count > 0) {
+					// need to order data according to _results header
+					string[] toWrite = new string[_results.Count];
+					// order elements to write them in a formatted order in the record file
+					foreach(KeyValuePair<string, string> p in savedData) { toWrite[_results.IndexOf(p.Key)] = p.Value; }
+					// prepare formatted string to receive the data
+					for(int i = 0; i < _results.Count; i++) { toRecord += " "+_results[i]+"=\"{"+i+"}\""; }
+					toRecord = string.Format(toRecord, toWrite);
+				} 
+				// order does not matter if the results header was provided
+				else { foreach(KeyValuePair<string, string> p in savedData) { toRecord += " "+p.Key+"=\""+p.Value+"\""; } }
+			}
+			toRecord += "/>";
+			writer.WriteLine(toRecord);
+			writer.Close();
 		}
 		#endregion
 
@@ -340,6 +468,8 @@ namespace UnityEzExp
 			else {
 				Trial t = _trials[_currentTrialIndex];
 				t.EndTrial();
+
+				if(_recordBehavior == RecordBehavior.SaveOnTrialEnd) { SaveCurrentTrial(Encoding.UTF8); }
 			}
 		}
 

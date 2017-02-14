@@ -21,13 +21,6 @@ namespace UnityEzExp
         NONE
     };
 
-    public enum FileType
-    {
-        CSV,
-        JSON,
-		XML
-    };
-
     public enum SaveType
     {
         ALL, // All data stored in one signe file
@@ -145,9 +138,9 @@ namespace UnityEzExp
         /// <summary>
         /// Load the variables file to prepare the experiment and create an <see cref="UnityEzExp.Experiment"/> instance to store them.</summary>
         /// <param name="filepath">File path to load data from</param>
-		public void LoadFile(string filepath, string participantID, string participantsHeader = "USER_ID")
+		public void LoadFile(string filepath, string participantID, string participantsHeader = "USER_ID", FileType inputFileType = FileType.CSV, FileType outputFileType = FileType.CSV)
         {
-			_currentExperiment = new Experiment(filepath, participantsHeader, participantID);
+			_currentExperiment = new Experiment(filepath, participantsHeader, participantID, inputFileType, outputFileType);
         }
 
         /// <summary>
@@ -178,6 +171,26 @@ namespace UnityEzExp
 		{
 			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
 			else { _currentExperiment.GetParameters(out parameters); }
+		}
+
+		/// <summary>
+		/// Sets the results header in order to format saved data into trial correctly.
+		/// </summary>
+		/// <param name="header">Header of the saved data.</param>
+		public void SetResultsHeader(string[] header)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			else { _currentExperiment.SetResults(header); }
+		}
+
+		/// <summary>
+		/// Sets the record file path.
+		/// </summary>
+		/// <param name="path">File path to record data into.</param>
+		public void SetRecordFilePath(string path)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			else { _currentExperiment.SetOutputFilePath(path); }
 		}
         #endregion
 
@@ -304,6 +317,7 @@ namespace UnityEzExp
             //TODO what happend in case of override ?
         }
         #endregion
+
 
         #region Timers 
         /// <summary>

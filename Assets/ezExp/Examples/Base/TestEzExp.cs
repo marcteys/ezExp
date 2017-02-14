@@ -14,7 +14,8 @@ public class TestEzExp : MonoBehaviour {
     void Start () {
         // GenerateNewCube();
 		//EzExp.Instance.Load("Assets/ezExp/Examples/test_file.csv");
-		EzExp.Instance.LoadFile("Assets/ezExp/Examples/test_file.csv", "4");
+		EzExp.Instance.LoadFile("Assets/ezExp/Examples/test_file.csv", "4", "USER_ID", FileType.CSV, FileType.XML);
+		EzExp.Instance.SetRecordFilePath("Assets/ezExp/Examples/saved_data.xml");
     }
 	
 	void Update () {
@@ -31,11 +32,12 @@ public class TestEzExp : MonoBehaviour {
 //				for(int i = 0; i < parameters.Length; ++i) {
 //					Log.Debug(parameters[i]+" = "+EzExp.Instance.GetParameterData(parameters[i]));
 //				}
+				EzExp.Instance.SetResultData("10", 10+"");
+				EzExp.Instance.SetResultData("5", 5+"");
+				EzExp.Instance.SetResultData("42", 42+"");
+				EzExp.Instance.SetResultData("92", 92+"");
 
-				EzExp.Instance.SetResultData("blabla", "1");
-				EzExp.Instance.SetResultData("blibli", "2");
-				EzExp.Instance.SetResultData("bleble", "3");
-				EzExp.Instance.SetResultData("bloblo", "4");
+				EzExp.Instance.SetResultsHeader(new string[]{"10", "92", "5", "42"});
 			} catch (AllTrialsPerformedException) { Log.Debug ("No more trial to run"); }
 		} else if (Input.GetKeyUp (KeyCode.S)) {
 			EzExp.Instance.StartTrial ();

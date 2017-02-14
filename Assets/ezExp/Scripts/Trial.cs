@@ -97,6 +97,18 @@ namespace UnityEzExp
 		}
 
 		/// <summary>
+		/// Gets all parameters data based on header contained in <see cref="UnityEzExp.Experiment"/>
+		/// </summary>
+		/// <returns>All parameters data for this trial.</returns>
+		public string[] GetAllData()
+		{
+			string[] copy = new string[_parametersData.Length];
+			Array.Copy(_parametersData, copy, _parametersData.Length);
+			return copy;
+		}
+
+
+		/// <summary>
 		/// Saves data about the trial in the Dictionary <see cref="UnityEzExp.Trial._savedData"/>.
 		/// </summary>
 		/// <param name="name">Name of the data.</param>
@@ -116,6 +128,18 @@ namespace UnityEzExp
 		/// <returns>The result data.</returns>
 		/// <param name="name">Name of the result.</param>
 		public string GetResultData(string name) { return _savedData[name]; }
+
+
+		/// <summary>
+		/// Get all results data saved for this trial.
+		/// </summary>
+		/// <returns>All results data in a dictionary.</returns>
+		public Dictionary<string, string> GetResultsData() 
+		{
+			Dictionary<string, string> copy = new Dictionary<string, string>();
+			foreach(KeyValuePair<string, string> p in _savedData) { copy.Add(p.Key, p.Value); }
+			return copy;
+		}
 		#endregion
 
         #region Functions
@@ -214,7 +238,8 @@ namespace UnityEzExp
         /// </summary>
         public void StartTrial()
         {
-            if (_trialState != TrialState.NotStarted) { throw new TrialStateException("The trial has already been started"); }
+            if (_trialState == TrialState.Started) { throw new TrialStateException("The trial has already been started"); }
+			else if (_trialState == TrialState.Ended) { throw new TrialStateException("The trial has already been ended"); }
             // StartAllTimers();
 			// StartTimer("main");
             _trialState = TrialState.Started;
@@ -225,7 +250,8 @@ namespace UnityEzExp
 		/// </summary>
         public void EndTrial()
         {
-            if (_trialState != TrialState.Started) { throw new TrialStateException("The trial was not started yet"); }
+            if (_trialState == TrialState.NotStarted) { throw new TrialStateException("The trial was not started yet."); }
+			else if (_trialState == TrialState.Ended) { throw new TrialStateException("The trial has already been ended."); }
             // EndTimer("main");
             _trialState = TrialState.Ended;
         }
