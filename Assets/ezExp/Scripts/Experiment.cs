@@ -67,7 +67,11 @@ namespace UnityEzExp
 		/// <summary>
 		/// Name of the results to display in the recorded files.
 		/// </summary>
-		List<string> _results = new List<string>();
+		string[] _resultsHeader;
+		/// <summary>
+		/// Name of the timers to display in the recorded files.
+		/// </summary>
+		string[] _timersHeader;
 
 		/// <summary>
 		/// List of all trials for a given user
@@ -147,18 +151,26 @@ namespace UnityEzExp
 		/// Returns the results name.
 		/// </summary>
 		/// <returns>The list of results name to an array.</returns>
-		public string[] GetResults() { return _results.ToArray(); }
+		public string[] GetResults() { return _resultsHeader; }
 
 		/// <summary>
 		/// Set the results header for record. This function should be called before saving trials data to ensure good formatting of the output data.
 		/// </summary>
 		/// <param name="results">Names of the results data.</param>
-		public void SetResults(string[] results)
+		public void SetResultsHeader(string[] results)
 		{
-			_results = new List<string>();
-			for(int i = 0; i < results.Length; i++) {
-				_results.Add(results[i]);
-			}
+			_resultsHeader = new string[results.Length];
+			Array.Copy(results, _resultsHeader, results.Length);
+		}
+
+		/// <summary>
+		/// Set the timers header for record. If this function is never called, timers are never saved (except the main timer of each trial).
+		/// </summary>
+		/// <param name="results">Names of the timers as saved in trials.</param>
+		public void SetTimersHeader(string[] timers)
+		{
+			_timersHeader = new string[timers.Length];
+			Array.Copy(timers, _timersHeader, timers.Length);
 		}
 
 		/// <summary>
@@ -312,7 +324,7 @@ namespace UnityEzExp
 			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); }
 
 			// warn in case the results header is not set
-			if (_results.Count == 0) { Log.Warning("The results header has not been set. Trials saved data might be wrongly formatted."); }
+			if (_resultsHeader == null) { Log.Warning("The results header has not been set. Trials saved data might be wrongly formatted."); }
 
 			switch (_outputFileType) {
 			case FileType.CSV:
@@ -333,7 +345,6 @@ namespace UnityEzExp
 		/// <param name="encoding">Encoding of the file.</param>
 		void SaveCurrentTrialCSV(Encoding encoding, char separation) 
 		{
-			if (_results.Count == 0) { Log.Warning("The results header has not been set. Trials saved data might be wrongly formatted."); }
 			Trial t = _trials[_currentTrialIndex];
 
 			bool created = !File.Exists(_outputFilePath);
@@ -342,7 +353,9 @@ namespace UnityEzExp
 			// write header at beginning of the file
 			if(created) {
 				string first = string.Join(separation+"", _parameters);
-				if(_results.Count > 0) { first += separation + string.Join(separation+"", _results.ToArray()); }
+				if(_resultsHeader != null) { first += separation + string.Join(separation+"", _resultsHeader); }
+				first += separation+"OverallTime";
+				if(_timersHeader != null) { first += separation + string.Join(separation+"", _timersHeader); }
 				writer.WriteLine(first);
 			} 
 
@@ -351,22 +364,31 @@ namespace UnityEzExp
 			// save all results saved for this trial
 			Dictionary<string, string> savedData = t.GetResultsData();
 			if(savedData.Count > 0) {
-				if(_results.Count > 0) {
-					// need to order data according to _results header
-					string[] toWrite = new string[_results.Count];
-					// order elements to write them in a formatted order in the record file
-					int index = 0;
-					foreach(KeyValuePair<string, string> p in savedData) {
-						toWrite[_results.IndexOf(p.Key)] = p.Value;
-						toRecord += separation+"{"+(index++)+"}";
-					}
-					toRecord = string.Format(toRecord, toWrite);
+
+				if(_resultsHeader != null) {
+					foreach(string rh in _resultsHeader) { toRecord += separation + t.GetResultData(rh); }
+//					// need to order data according to _results header
+//					string[] toWrite = new string[_resultsHeader.Count];
+//					// order elements to write them in a formatted order in the record file
+//					int index = 0;
+//					foreach(KeyValuePair<string, string> p in savedData) {
+//						toWrite[_resultsHeader.IndexOf(p.Key)] = p.Value;
+//						toRecord += separation+"{"+(index++)+"}";
+//					}
+//					toRecord = string.Format(toRecord, toWrite);
 				} 
 				// order does not matter if the results header was provided
 				else {
 					foreach(string v in savedData.Values) { toRecord += separation+v; }
 				}
 			}
+			// always save main timer
+			toRecord += separation +""+ t.GetMainRawDuration();
+			// save all timers at the end
+			if(_timersHeader != null) { 
+				foreach(string th in _timersHeader) { toRecord += separation +""+ t.GetTimerRawDuration(th); }
+			}
+
 			writer.WriteLine(toRecord);
 			writer.Close();
 		}
@@ -380,7 +402,7 @@ namespace UnityEzExp
 		{ 
 			Trial t = _trials[_currentTrialIndex];
 
-			StreamWriter writer = new StreamWriter(_outputFilePath);
+			StreamWriter writer = new StreamWriter(_outputFilePath, true);
 
 			string toRecord = "<trial";
 			// first record all parameters
@@ -388,18 +410,25 @@ namespace UnityEzExp
 
 			Dictionary<string, string> savedData = t.GetResultsData();
 			if(savedData.Count > 0) {
-				if(_results.Count > 0) {
-					// need to order data according to _results header
-					string[] toWrite = new string[_results.Count];
-					// order elements to write them in a formatted order in the record file
-					foreach(KeyValuePair<string, string> p in savedData) { toWrite[_results.IndexOf(p.Key)] = p.Value; }
-					// prepare formatted string to receive the data
-					for(int i = 0; i < _results.Count; i++) { toRecord += " "+_results[i]+"=\"{"+i+"}\""; }
-					toRecord = string.Format(toRecord, toWrite);
-				} 
+				if(_resultsHeader != null) {
+					foreach(string rh in _resultsHeader) { toRecord += " "+rh+"=\""+ t.GetResultData(rh) +"\""; }
+				}
+//					// need to order data according to _results header
+//					string[] toWrite = new string[_results.Count];
+//					// order elements to write them in a formatted order in the record file
+//					foreach(KeyValuePair<string, string> p in savedData) { toWrite[_results.IndexOf(p.Key)] = p.Value; }
+//					// prepare formatted string to receive the data
+//					for(int i = 0; i < _results.Count; i++) { toRecord += " "+_results[i]+"=\"{"+i+"}\""; }
+//					toRecord = string.Format(toRecord, toWrite);
+//				} 
 				// order does not matter if the results header was provided
 				else { foreach(KeyValuePair<string, string> p in savedData) { toRecord += " "+p.Key+"=\""+p.Value+"\""; } }
 			}
+			// always save main timer (should be able to rename it)
+			toRecord += " OverallTime=\""+ t.GetMainRawDuration() +"\"";
+			// save all timers at the end
+			if(_timersHeader != null) { foreach(string th in _timersHeader) { toRecord += " "+th+"=\""+ t.GetTimerRawDuration(th) +"\""; } }
+
 			toRecord += "/>";
 			writer.WriteLine(toRecord);
 			writer.Close();
@@ -496,6 +525,72 @@ namespace UnityEzExp
 			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
 			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
 			else { return _trials[_currentTrialIndex].GetResultData(name); }
+		}
+
+		/// <summary>
+		/// Adds a timer to the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void AddTimer(string name)
+		{
+			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
+			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
+			_trials[_currentTrialIndex].AddTimer(name);
+		}
+
+		/// <summary>
+		/// Removes a previously added timer from the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void RemoveTimer(string name)
+		{
+			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
+			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
+			_trials[_currentTrialIndex].RemoveTimer(name);
+		}
+
+		/// <summary>
+		/// Starts a timer owned by the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void StartTimer(string name)
+		{
+			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
+			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
+			_trials[_currentTrialIndex].StartTimer(name);
+		}
+
+		/// <summary>
+		/// Pauses a timer owned by the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void PauseTimer(string name)
+		{
+			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
+			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
+			_trials[_currentTrialIndex].PauseTimer(name);
+		}
+
+		/// <summary>
+		/// Resumes a timer owned by the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void ResumeTimer(string name)
+		{
+			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
+			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
+			_trials[_currentTrialIndex].ResumeTimer(name);
+		}
+
+		/// <summary>
+		/// Stops a timer owned by the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void StopTimer(string name)
+		{
+			if (_currentTrialIndex < 0) { throw new TrialNotLoadedException (); }
+			else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException (); } 
+			_trials[_currentTrialIndex].StopTimer(name);
 		}
 		#endregion
     }

@@ -14,8 +14,8 @@ public class TestEzExp : MonoBehaviour {
     void Start () {
         // GenerateNewCube();
 		//EzExp.Instance.Load("Assets/ezExp/Examples/test_file.csv");
-		EzExp.Instance.LoadFile("Assets/ezExp/Examples/test_file.csv", "4", "USER_ID", FileType.CSV, FileType.XML);
-		EzExp.Instance.SetRecordFilePath("Assets/ezExp/Examples/saved_data.xml");
+		EzExp.Instance.InitExperiment("Assets/ezExp/Examples/test_file.csv", "4", "USER_ID", FileType.CSV, FileType.CSV);
+		EzExp.Instance.SetRecordFilePath("Assets/ezExp/Examples/saved_data.csv");
     }
 	
 	void Update () {
@@ -37,11 +37,27 @@ public class TestEzExp : MonoBehaviour {
 				EzExp.Instance.SetResultData("42", 42+"");
 				EzExp.Instance.SetResultData("92", 92+"");
 
+				EzExp.Instance.AddTimer("yeah");
+				EzExp.Instance.AddTimer("zblah");
+
 				EzExp.Instance.SetResultsHeader(new string[]{"10", "92", "5", "42"});
+				EzExp.Instance.SetTimersHeader(new string[]{"zblah", "yeah"});
 			} catch (AllTrialsPerformedException) { Log.Debug ("No more trial to run"); }
-		} else if (Input.GetKeyUp (KeyCode.S)) {
+		} 
+		else if (Input.GetKeyUp (KeyCode.P)) {
+			EzExp.Instance.PauseTimer("yeah");
+		}
+		else if (Input.GetKeyUp (KeyCode.R)) {
+			EzExp.Instance.ResumeTimer("yeah");
+		}
+		else if (Input.GetKeyUp (KeyCode.T)) {
+			EzExp.Instance.StopTimer("zblah");
+		}
+		else if (Input.GetKeyUp (KeyCode.S)) {
 			EzExp.Instance.StartTrial ();
 			Log.Debug ("Trial started");
+			EzExp.Instance.StartTimer("yeah");
+			EzExp.Instance.StartTimer("zblah");
 		} else if (Input.GetKeyUp (KeyCode.E)) {
 			EzExp.Instance.EndTrial ();
 			Log.Debug("Trial ended: "+ EzExp.Instance.GetCurrentTrial().ToString(","));

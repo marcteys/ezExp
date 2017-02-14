@@ -17,17 +17,17 @@ namespace UnityEzExp
         /// </summary>
         public class DifferentSizeException : Exception { public DifferentSizeException(string msg) : base(msg) { } };
         /// <summary>
-        /// Exception thrown on timer duration estimation and start time is greater than ending time
-        /// </summary>
-        public class TimerNotEndedException : Exception { public TimerNotEndedException(string msg) : base(msg) { } };
-        /// <summary>
         /// Exception thrown when trying to end a trial that was not started
         /// </summary>
-        public class TrialStateException : Exception { public TrialStateException(string msg) : base(msg) { } };
+        public class TemporalStateException : Exception { public TemporalStateException(string msg) : base(msg) { } };
 		/// <summary>
 		/// Exception thrown if the trial was not bound to an experiment.
 		/// </summary>
 		public class NotExperimentBoundException: Exception {};
+		/// <summary>
+		/// Exception thrown when the user tries to add an already added timer.
+		/// </summary>
+		public class TimerAlreadyExistsException: Exception {};
         #endregion
 
         #region Attributes
@@ -41,14 +41,18 @@ namespace UnityEzExp
 		/// </summary>
 		Dictionary<string, string> _savedData = new Dictionary<string, string>();
 
+		/// <summary>
+		/// Main timer used to time the overall trial.
+		/// </summary>
+		EzTimer _mainTimer = new EzTimer();
+
         /// <summary>
         /// Dictionary containing pairs representing starting and ending time of timers named as the dictionary key.
         /// This dictionary will always at least contain one main timer for the trial.
         /// </summary>
         Dictionary<string, EzTimer> _timers = new Dictionary<string, EzTimer>();
 
-        public enum TrialState { NotStarted, Started, Ended };
-        TrialState _trialState = TrialState.NotStarted;
+        TemporalState _trialState = TemporalState.NotStarted;
 
         Experiment _parentExperiment = null;
 
@@ -140,87 +144,79 @@ namespace UnityEzExp
 			foreach(KeyValuePair<string, string> p in _savedData) { copy.Add(p.Key, p.Value); }
 			return copy;
 		}
+
+		/// <summary>
+		/// Gets a copy of the timer associated with this name.
+		/// </summary>
+		/// <returns>A copy of the timer instance.</returns>
+		/// <param name="name">Name of the timer.</param>
+		// public EzTimer GetTimer(string name) { return new EzTimer(_timers[name]); }
 		#endregion
 
-        #region Functions
+        #region timers
+		/// <summary>
+		/// Adds a new timer.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void AddTimer(string name)
+		{
+			if(_timers.ContainsKey(name)) { throw new TimerAlreadyExistsException(); }
+			_timers.Add(name, new EzTimer());
+		}
+
+		/// <summary>
+		/// Used to 
+		/// </summary>
+		/// <param name="timerName"></param>
+		/// <returns></returns>
+		public bool RemoveTimer(string name) { return _timers.Remove(name); }
+
         /// <summary>
-        /// Add a timer to the dictionary with a given name that will be used to access it in the future.
+        /// Starts a timer present in the list.
         /// </summary>
-        /// <param name="name">Name of the timer to add.</param>
-        public void StartTimer(string name)
-        {
-            if (name == "main" && _timers.Count > 0 ) {
-                Log.Error("The timer name'main' is reserved");
-                return;
-            }
+        /// <param name="name">Name of the timer to start.</param>
+        public void StartTimer(string name) { _timers[name].Start(); }
 
-            if (GetExistingTimer(name) != null)
-            {
-                _timers.Remove(name);
-                Log.Warning("A timer with the name <color=#f500f5>" + name + "</color> already exist. Remocing");
-            }
-            _timers.Add(name, new EzTimer(GetExistingTimer("name")._originalStartTime));
-        }
+		/// <summary>
+		/// Pauses a timer present in the list.
+		/// </summary>
+		/// <param name="name">Name of the timer to pause.</param>
+		public void PauseTimer(string name) { _timers[name].Pause(); }
 
-        /// <summary>
-        /// Ends the timer with the given name
-        /// </summary>
-        /// <param name="name">Name of the timer.</param>
-        public string EndTimer(string name, TimeFormat format = TimeFormat.MINUTES)
-        {
-            EzTimer timer = GetExistingTimer(name);
-            if (timer != null)
-            {
-                string time = timer.GetTime(format);
-                RemoveTimer(name);
-                return time;
-            }
-            else
-            {
-                return "ERROR // TODO";
-            }
-
-        }
+		/// <summary>
+		/// Pauses a timer present in the list.
+		/// </summary>
+		/// <param name="name">Name of the timer to pause.</param>
+		public void ResumeTimer(string name) { _timers[name].Resume(); }
 
         /// <summary>
-        /// Gets the duration of the timer.
+        /// Stops the timer with the given name.
         /// </summary>
         /// <param name="name">Name of the timer.</param>
-        public float GetTimerDuration(string name)
-        {
-            EzTimer timer = GetExistingTimer(name);
-            if (timer != null)
-            {
-                return timer.GetTimeSeconds();
-            } else
-            {
-                return 0; // todo : redo
-            }
-        }
+        public void StopTimer(string name) { _timers[name].Stop(); }
 
         /// <summary>
-        /// Used to 
+        /// Gets the duration of the timer without formatting.
         /// </summary>
-        /// <param name="timerName"></param>
-        /// <returns></returns>
-        EzTimer GetExistingTimer(string timerName)
-        {
-            EzTimer existingTimer = null;
-            if (!_timers.ContainsKey(timerName)) { throw new KeyNotFoundException(); }
-            _timers.TryGetValue(timerName, out existingTimer);
-            return existingTimer;
-        }
+        /// <param name="name">Name of the timer.</param>
+        public float GetTimerRawDuration(string name) { return _timers[name].GetRawDuration(); }
 
-        /// <summary>
-        /// Used to 
-        /// </summary>
-        /// <param name="timerName"></param>
-        /// <returns></returns>
-        bool RemoveTimer(string timerName)
-        {
-            _timers.Remove(timerName);
-            return true;
-        }
+		/// <summary>
+		/// Gets the duration of the timer formatted.
+		/// </summary>
+		/// <returns>The timer duration.</returns>
+		/// <param name="name">Name of the timer.</param>
+		public TimeSpan GetTimerDuration(string name) { return _timers[name].GetDuration(); }
+
+		/// <summary>
+		/// Gets the main duration of the trial without formatting.
+		/// </summary>
+		public float GetMainRawDuration() { return _mainTimer.GetRawDuration(); }
+
+		/// <summary>
+		/// Gets the main duration of the trial formatted.
+		/// </summary>
+		public TimeSpan GetMainDuration() { return _mainTimer.GetDuration(); }
 
         /// <summary>
         /// Gets the timers names.
@@ -232,28 +228,33 @@ namespace UnityEzExp
             _timers.Keys.CopyTo(res, 0);
             return res;
         }
+		#endregion 
 
+		#region functions
         /// <summary>
         /// Starts this trial (starts all timers by default and set state to started).
         /// </summary>
         public void StartTrial()
         {
-            if (_trialState == TrialState.Started) { throw new TrialStateException("The trial has already been started"); }
-			else if (_trialState == TrialState.Ended) { throw new TrialStateException("The trial has already been ended"); }
+            if (_trialState == TemporalState.Started) { throw new TemporalStateException("The trial has already been started"); }
+			else if (_trialState == TemporalState.Ended) { throw new TemporalStateException("The trial has already been ended"); }
             // StartAllTimers();
 			// StartTimer("main");
-            _trialState = TrialState.Started;
+            _trialState = TemporalState.Started;
+			_mainTimer.Start();
         }
 
 		/// <summary>
-		/// Ends the trial.
+		/// Ends the trial. The main timer is stopped along with all timers not stopped already.
 		/// </summary>
         public void EndTrial()
         {
-            if (_trialState == TrialState.NotStarted) { throw new TrialStateException("The trial was not started yet."); }
-			else if (_trialState == TrialState.Ended) { throw new TrialStateException("The trial has already been ended."); }
+            if (_trialState == TemporalState.NotStarted) { throw new TemporalStateException("The trial was not started yet."); }
+			else if (_trialState == TemporalState.Ended) { throw new TemporalStateException("The trial has already been ended."); }
             // EndTimer("main");
-            _trialState = TrialState.Ended;
+            _trialState = TemporalState.Ended;
+			_mainTimer.Stop();
+			foreach(EzTimer timer in _timers.Values) { if(timer.GetState() == TemporalState.Started) { timer.Stop(); } }
         }
 
         
@@ -281,12 +282,12 @@ namespace UnityEzExp
 				}
 			}
 
-			// TODO
-//			if(showTimers) {
-//				foreach(KeyValuePair<string, EzTimer> p in _timers) {
-					// res += p.Key +"="+ p.Value.GetTimeSeconds() + separation;
-//				}
-//			}
+			if(showTimers) {
+				res += "mainTimer="+_mainTimer.GetRawDuration() + separation;
+				foreach(KeyValuePair<string, EzTimer> p in _timers) {
+					 res += p.Key +"="+ p.Value.GetRawDuration() + separation;
+				}
+			}
 
             return res.Substring(0, res.Length - 1);
         }

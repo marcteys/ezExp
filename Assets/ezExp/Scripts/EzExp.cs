@@ -28,13 +28,13 @@ namespace UnityEzExp
         TRIAL
     };
 
-    public enum ExperimentState
-    {
-        EMPTY, // All data stored in one signe file
-        HEADERLOADED, // Foreach new user, we save 
-        DATALOADED,
-        ENDED
-    };
+//    public enum ExperimentState
+//    {
+//        EMPTY, // All data stored in one signe file
+//        HEADERLOADED, // Foreach new user, we save 
+//        DATALOADED,
+//        ENDED
+//    };
 
     public enum TimeFormat
     {
@@ -42,6 +42,13 @@ namespace UnityEzExp
         SECONDS,
         MINUTES
     };
+
+	public enum TemporalState
+	{
+		NotStarted,
+		Started,
+		Ended
+	}
 
     /// <summary>
     /// The <see cref="UnityEzExp.EzExp"/> class is used as an interface to the EzExp package. This only class has to be managed to use all functions. 
@@ -138,7 +145,7 @@ namespace UnityEzExp
         /// <summary>
         /// Load the variables file to prepare the experiment and create an <see cref="UnityEzExp.Experiment"/> instance to store them.</summary>
         /// <param name="filepath">File path to load data from</param>
-		public void LoadFile(string filepath, string participantID, string participantsHeader = "USER_ID", FileType inputFileType = FileType.CSV, FileType outputFileType = FileType.CSV)
+		public void InitExperiment(string filepath, string participantID, string participantsHeader = "USER_ID", FileType inputFileType = FileType.CSV, FileType outputFileType = FileType.CSV)
         {
 			_currentExperiment = new Experiment(filepath, participantsHeader, participantID, inputFileType, outputFileType);
         }
@@ -180,7 +187,17 @@ namespace UnityEzExp
 		public void SetResultsHeader(string[] header)
 		{
 			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
-			else { _currentExperiment.SetResults(header); }
+			else { _currentExperiment.SetResultsHeader(header); }
+		}
+
+		/// <summary>
+		/// Sets the timers header to show choosed timers on the output file.
+		/// </summary>
+		/// <param name="header">Header of the saved data.</param>
+		public void SetTimersHeader(string[] header)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			else { _currentExperiment.SetTimersHeader(header); }
 		}
 
 		/// <summary>
@@ -320,31 +337,65 @@ namespace UnityEzExp
 
 
         #region Timers 
+		/// <summary>
+		/// Adds a timer to the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void AddTimer(string name)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			_currentExperiment.AddTimer(name);
+		}
+
+		/// <summary>
+		/// Removes a timer previously added to the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void RemoveTimer(string name)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			_currentExperiment.RemoveTimer(name);
+		}
+
         /// <summary>
-        /// This should start automatically
+        /// Starts a timer previously added to the current trial.
         /// </summary>
-        /// <param name="timerName"></param>
-        /// <param name="defaultFormat"></param>
-        public void StartTimer(string timerName, string defaultFormat = "")
+        /// <param name="name">Name of the timer.</param>
+        public void StartTimer(string name)
         {
-            Trial currentTrial = GetCurrentTrial();
-            if (currentTrial != null)
-            {
-
-            } else
-            {
-
-            }
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			_currentExperiment.StartTimer(name);
         }
 
-        public string EndTimer(string timerName)
-        {
-            Trial currentTrial = GetCurrentTrial();
+		/// <summary>
+		/// Pauses a timer previously added to the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void PauseTimer(string name)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			_currentExperiment.PauseTimer(name);
+		}
 
-            string timer = currentTrial.EndTimer(timerName);
-            return timer;
-        }
+		/// <summary>
+		/// Resumes a timer previously added to the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void ResumeTimer(string name)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			_currentExperiment.ResumeTimer(name);
+		}
 
+		/// <summary>
+		/// Starts a timer previously added to the current trial.
+		/// </summary>
+		/// <param name="name">Name of the timer.</param>
+		public void StopTimer(string name)
+		{
+			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
+			_currentExperiment.StopTimer(name);
+		}
         #endregion
     }
 }
