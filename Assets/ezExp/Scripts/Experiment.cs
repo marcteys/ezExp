@@ -4,7 +4,6 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEzExp;
-using FileWriter;
 // TODO : use emum ExperimentState 
 //TODO : faire une bool "reprnedre la ou on était" qui reprend le dernier utilisateur, etc ? 
 
