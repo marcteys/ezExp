@@ -144,10 +144,13 @@ namespace UnityEzExp
         }
         /// <summary>
         /// Load the variables file to prepare the experiment and create an <see cref="UnityEzExp.Experiment"/> instance to store them.</summary>
-        /// <param name="filepath">File path to load data from</param>
-		public void InitExperiment(string filepath, string participantID, string participantsHeader = "USER_ID", FileType inputFileType = FileType.CSV, FileType outputFileType = FileType.CSV)
+        /// <param name="filepath">File path to load data from.</param>
+        /// <param name="userId">ID of the participant to load experiment data for.</param>
+        /// <param name="trialId">ID of the trial to start from.</param>
+        /// <param name="usersHeader">Name of the column where users ids can be found.</param>
+		public void InitExperiment(string filepath, string userId, int trialId, string usersHeader = "Participant", FileType inputFileType = FileType.CSV, FileType outputFileType = FileType.CSV)
         {
-			_currentExperiment = new Experiment(filepath, participantsHeader, participantID, inputFileType, outputFileType);
+			_currentExperiment = new Experiment(filepath, userId, trialId, usersHeader, inputFileType, outputFileType);
         }
 
         /// <summary>
@@ -272,7 +275,7 @@ namespace UnityEzExp
         {
 			if(_currentExperiment == null) { throw new ExperimentNotCreatedException(); }
 			Trial t = _currentExperiment.GetCurrentTrial();
-			return t.GetData(parameter);
+			return t.GetParameterData(parameter);
         }
 
 

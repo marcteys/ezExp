@@ -87,11 +87,11 @@ namespace UnityEzExp
 
 		#region getters/setters
 		/// <summary>
-		/// Gets the data for a given parameter
+		/// Gets the data for a given parameter.
 		/// </summary>
 		/// <param name="parameter">Name of the parameter associated to the data.</param>
 		/// <returns>The data.</returns>
-		public string GetData(string parameter)
+		public string GetParameterData(string parameter)
 		{
 			if(_parentExperiment == null) { throw new NotExperimentBoundException(); }
 			else {
