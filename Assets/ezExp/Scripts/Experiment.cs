@@ -23,6 +23,10 @@ namespace UnityEzExp
     /// </summary>
     public class TrialNotLoadedException : Exception { };
     /// <summary>
+    /// Exception thrown if the trials were not loaded yet.
+    /// </summary>
+    public class TrialsEmptyException : Exception { };
+    /// <summary>
     /// Exception thrown if the trialId do not match the list of trials.
     /// </summary>
     public class TrialIdOutOfBoundsException : Exception { };
@@ -116,7 +120,7 @@ namespace UnityEzExp
             _inputFileType = inputFileType;
             _outputFileType = outputFileType;
             // prediction of next LoadNextTrial()
-            _currentTrialIndex = trialId-1;
+            _currentTrialIndex = trialId - 1;
 
             LoadFile(Encoding.UTF8);
 
@@ -192,6 +196,19 @@ namespace UnityEzExp
         {
             _timersHeader = new string[timers.Length];
             Array.Copy(timers, _timersHeader, timers.Length);
+        }
+
+        /// <summary>
+        /// Add a new timestamp field in the results table based on the main timer current time.
+        /// </summary>
+        /// <param name="results">Names of the timers as saved in trials.</param>
+        /// <returns>Whether the timestamp was added to the result table.</returns>
+        public bool SetTimestamp(string name)
+        {
+            if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
+            else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+
+            return SetResultData(name, _trials[_currentTrialIndex].GetMainRawDuration() + "");
         }
 
         /// <summary>
@@ -284,7 +301,7 @@ namespace UnityEzExp
         }
 
         /// <summary>
-        /// Load the config file as CSV
+        /// Load the config file as CSV. All trials for a given participant will be added to the list of trials.
         /// </summary>
         /// <returns>Return the first trial</returns>
 		void LoadCSV(Encoding encoding, char separation)
@@ -387,7 +404,7 @@ namespace UnityEzExp
             {
                 string first = string.Join(separation + "", _parameters);
                 if (_resultsHeader != null) { first += separation + string.Join(separation + "", _resultsHeader); }
-                first += separation + "OverallTime";
+                first += separation + "TaskCompletionTime";
                 if (_timersHeader != null) { first += separation + string.Join(separation + "", _timersHeader); }
                 writer.WriteLine(first);
             }
@@ -464,7 +481,7 @@ namespace UnityEzExp
                 else { foreach (KeyValuePair<string, string> p in savedData) { toRecord += " " + p.Key + "=\"" + p.Value + "\""; } }
             }
             // always save main timer (should be able to rename it)
-            toRecord += " OverallTime=\"" + t.GetMainRawDuration() + "\"";
+            toRecord += " TaskCompletionTime=\"" + t.GetMainRawDuration() + "\"";
             // save all timers at the end
             if (_timersHeader != null) { foreach (string th in _timersHeader) { toRecord += " " + th + "=\"" + t.GetTimerRawDuration(th) + "\""; } }
 
@@ -513,6 +530,15 @@ namespace UnityEzExp
             else { return _trials[_currentTrialIndex]; }
         }
 
+        /// <summary>
+        /// Get all trials loaded for the given participant.
+        /// </summary>
+        /// <returns>Array of all trials.</returns>
+        public Trial[] GetAllParticipantTrials()
+        {
+            if (_trials == null || _trials.Count == 0) { throw new TrialsEmptyException(); }
+            return _trials.ToArray();
+        }
 
         /// <summary>
         /// Starts the current trial. A trial has to be loaded before calling this function (<see cref="UnityEzExp.Experiment.LoadNextTrial"/>).
@@ -552,12 +578,32 @@ namespace UnityEzExp
         /// </summary>
         /// <param name="name">Name of the data.</param>
         /// <param name="value">Value of the data.</param>
-        public void SetResultData(string name, string value)
+        /// <returns>Whether the timestamp was added to the results table.</returns>
+        public bool SetResultData(string name, string value)
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
-            else { _trials[_currentTrialIndex].SetResultData(name, value); }
+
+            return _trials[_currentTrialIndex].SetResultData(name, value);
         }
+
+
+        /// <summary>
+        /// Set multiple results data at the same time.
+        /// </summary>
+        /// <param name="results">Keys = result header and Values = results' data</param>
+        public void SetResultsData(ref Dictionary<string, string> results)
+        {
+            if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
+            else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+
+            foreach (KeyValuePair<string, string> pair in results)
+            {
+                bool added = _trials[_currentTrialIndex].SetResultData(pair.Key, pair.Value);
+                if (added) { Log.Debug("Added results on trial ready: " + pair.Key); }
+            }
+        }
+
 
         /// <summary>
         /// Gets data of a given result data.
@@ -568,7 +614,8 @@ namespace UnityEzExp
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
-            else { return _trials[_currentTrialIndex].GetResultData(name); }
+
+            return _trials[_currentTrialIndex].GetResultData(name);
         }
 
         /// <summary>
@@ -579,6 +626,7 @@ namespace UnityEzExp
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+
             _trials[_currentTrialIndex].AddTimer(name);
         }
 
@@ -590,6 +638,7 @@ namespace UnityEzExp
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+
             _trials[_currentTrialIndex].RemoveTimer(name);
         }
 
@@ -601,6 +650,7 @@ namespace UnityEzExp
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+
             _trials[_currentTrialIndex].StartTimer(name);
         }
 
@@ -612,6 +662,7 @@ namespace UnityEzExp
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+
             _trials[_currentTrialIndex].PauseTimer(name);
         }
 
@@ -623,6 +674,7 @@ namespace UnityEzExp
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+
             _trials[_currentTrialIndex].ResumeTimer(name);
         }
 
@@ -634,6 +686,7 @@ namespace UnityEzExp
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+
             _trials[_currentTrialIndex].StopTimer(name);
         }
         #endregion
