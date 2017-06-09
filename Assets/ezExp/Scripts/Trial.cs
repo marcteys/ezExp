@@ -131,7 +131,10 @@ namespace UnityEzExp
 		/// </summary>
 		/// <returns>The result data.</returns>
 		/// <param name="name">Name of the result.</param>
-		public string GetResultData(string name) { return _savedData[name]; }
+		public string GetResultData(string name) {
+            try { return _savedData[name]; }
+            catch(KeyNotFoundException exn) { Debug.LogError("Key not found: " + name); return null; }
+        }
 
 
 		/// <summary>
@@ -257,6 +260,16 @@ namespace UnityEzExp
 			foreach(EzTimer timer in _timers.Values) { if(timer.GetState() == TemporalState.Started) { timer.Stop(); } }
         }
 
+
+        /// <summary>
+        /// Cancels the trial. The main timer is reset to 0 and the trial can be started again.
+        /// </summary>
+        public void ResetTrial()
+        {
+            _trialState = TemporalState.NotStarted;
+            _mainTimer.Reset();
+            foreach (EzTimer timer in _timers.Values) { if (timer.GetState() == TemporalState.Started) { timer.Reset(); } }
+        }
         
         /// <summary>
         /// Returns a string concatenating all attributes values.

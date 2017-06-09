@@ -190,6 +190,18 @@ namespace UnityEzExp
 			_duration = ComputeDuration();
         }
 
+        /// <summary>
+        /// Resets the timer to its initial settings (i.e. settings defined in its constructors).
+        /// </summary>
+        public void Reset()
+        {
+            _temporalState = TemporalState.NotStarted;
+            _startTime = 0f;
+            _breaks = new List<float>();
+            _endTime = 0f;
+            _duration = 0f;
+        }
+
 		/// <summary>
 		/// Computes the duration based on starting time. If the timer is not yet ended, the computation is done anyway.
 		/// </summary>

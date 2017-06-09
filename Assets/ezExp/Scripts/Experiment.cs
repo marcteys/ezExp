@@ -120,7 +120,7 @@ namespace UnityEzExp
             _inputFileType = inputFileType;
             _outputFileType = outputFileType;
             // prediction of next LoadNextTrial()
-            _currentTrialIndex = trialId - 1;
+            _currentTrialIndex = trialId-1;
 
             LoadFile(Encoding.UTF8);
 
@@ -208,7 +208,7 @@ namespace UnityEzExp
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
 
-            return SetResultData(name, _trials[_currentTrialIndex].GetMainRawDuration() + "");
+            return SetResultData(name, _trials[_currentTrialIndex].GetMainRawDuration()+"");
         }
 
         /// <summary>
@@ -571,8 +571,20 @@ namespace UnityEzExp
                 if (_recordBehavior == RecordBehavior.SaveOnTrialEnd) { SaveCurrentTrial(Encoding.UTF8); }
             }
         }
-
-
+        
+        /// <summary>
+        /// Resets the current trial to its default settings before it was started. 
+        /// </summary>
+        public void ResetTrial()
+        {
+            if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
+            else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
+            else
+            {
+                _trials[_currentTrialIndex].ResetTrial();
+            }
+        }
+        
         /// <summary>
         /// Records data about the trial. A trial has to be loaded before calling this function (<see cref="UnityEzExp.Experiment.LoadNextTrial"/>).
         /// </summary>
@@ -596,11 +608,10 @@ namespace UnityEzExp
         {
             if (_currentTrialIndex < 0) { throw new TrialNotLoadedException(); }
             else if (_trials.Count <= _currentTrialIndex) { throw new AllTrialsPerformedException(); }
-
-            foreach (KeyValuePair<string, string> pair in results)
-            {
+             
+            foreach (KeyValuePair<string, string> pair in results) {
                 bool added = _trials[_currentTrialIndex].SetResultData(pair.Key, pair.Value);
-                if (added) { Log.Debug("Added results on trial ready: " + pair.Key); }
+                if(added) { Log.Debug("Added results on trial ready: " + pair.Key); }
             }
         }
 
