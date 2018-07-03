@@ -106,11 +106,11 @@ namespace UnityEzExp
         Experiment _currentExperiment = null;
 
         public LogLevel logLevel = LogLevel.DEBUG;
-
+        [HideInInspector]
         public SaveType saveType = SaveType.ALL;
-
+        [HideInInspector]
         public string inputFile;
-
+        [HideInInspector]
         public string outputFolder;
 
         public bool useStartScreen; // Si on est sur la scène de base, on charge le truc de base

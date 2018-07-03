@@ -14,7 +14,7 @@ public class TestEzExp : MonoBehaviour {
     void Start () {
         // GenerateNewCube();
 		//EzExp.Instance.Load("Assets/ezExp/Examples/test_file.csv");
-		EzExp.Instance.InitExperiment("Assets/ezExp/Examples/test_file.csv", "4", "USER_ID", FileType.CSV, FileType.CSV);
+    	EzExp.Instance.InitExperiment("Assets/ezExp/Examples/test_file.csv", "4", 2);
 		EzExp.Instance.SetRecordFilePath("Assets/ezExp/Examples/saved_data.csv");
     }
 	
